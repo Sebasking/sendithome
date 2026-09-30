@@ -1,5 +1,17 @@
 import Config
 config :shipper_directory, Oban, testing: :manual
+
+# Presence checks hit Req.Test stubs instead of the network.
+config :shipper_directory, :presence_req_options,
+  plug: {Req.Test, ShipperDirectory.Directory.Presence},
+  retry: false
+
+config :shipper_directory, :google_places_api_key, "test-key"
+
+config :shipper_directory, :google_places_req_options,
+  plug: {Req.Test, ShipperDirectory.Discovery.GooglePlaces},
+  retry: false
+
 config :ash, policies: [show_policy_breakdowns?: true], disable_async?: true
 
 # Configure your database
@@ -41,3 +53,5 @@ config :phoenix_live_view,
 # Sort query params output of verified routes for robust url comparisons
 config :phoenix,
   sort_verified_routes_query_params: true
+
+config :shipper_directory, :admin_auth, username: "admin", password: "secret"

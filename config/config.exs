@@ -10,7 +10,13 @@ import Config
 config :shipper_directory, Oban,
   engine: Oban.Engines.Basic,
   notifier: Oban.Notifiers.Postgres,
-  queues: [default: 10],
+  queues: [default: 10, presence: 5, google: 2],
+  cron: [
+    crontab: [
+      {"0 6 * * *", ShipperDirectory.Workers.PresenceRecheckScheduler},
+      {"0 5 * * MON", ShipperDirectory.Workers.FmcImportWorker}
+    ]
+  ],
   lifeline: [rescue_after: {2, :hours}],
   pruner: [max_age: {1, :day}],
   repo: ShipperDirectory.Repo
@@ -63,6 +69,7 @@ config :spark,
 
 config :shipper_directory,
   ecto_repos: [ShipperDirectory.Repo],
+  ash_domains: [ShipperDirectory.Directory],
   generators: [timestamp_type: :utc_datetime]
 
 # Configure the endpoint

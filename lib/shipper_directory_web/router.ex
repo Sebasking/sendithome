@@ -10,6 +10,10 @@ defmodule ShipperDirectoryWeb.Router do
     plug :put_secure_browser_headers
   end
 
+  pipeline :admin do
+    plug ShipperDirectoryWeb.Plugs.AdminAuth
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
   end
@@ -18,6 +22,13 @@ defmodule ShipperDirectoryWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+  end
+
+  scope "/admin", ShipperDirectoryWeb.Admin do
+    pipe_through [:browser, :admin]
+
+    live "/", CompaniesLive, :index
+    get "/prospects.csv", ProspectExportController, :index
   end
 
   # Other scopes may use custom stacks.

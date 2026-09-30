@@ -40,7 +40,15 @@ if config_env() == :dev do
     ]
 end
 
+if config_env() != :test do
+  config :shipper_directory, :google_places_api_key, System.get_env("GOOGLE_PLACES_API_KEY")
+end
+
 if config_env() == :prod do
+  config :shipper_directory, :admin_auth,
+    username: System.get_env("ADMIN_USERNAME") || raise("ADMIN_USERNAME is missing"),
+    password: System.get_env("ADMIN_PASSWORD") || raise("ADMIN_PASSWORD is missing")
+
   database_url =
     System.get_env("DATABASE_URL") ||
       raise """

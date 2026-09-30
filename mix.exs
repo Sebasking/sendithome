@@ -74,6 +74,10 @@ defmodule ShipperDirectory.MixProject do
        depth: 1},
       {:swoosh, "~> 1.16"},
       {:req, "~> 0.5"},
+      {:floki, "~> 0.38"},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:nimble_csv, "~> 1.2"},
+      {:xlsx_reader, "~> 0.8"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 1.0"},
@@ -102,7 +106,13 @@ defmodule ShipperDirectory.MixProject do
         "esbuild shipper_directory --minify",
         "phx.digest"
       ],
-      precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]
+      precommit: [
+        "compile --warnings-as-errors",
+        "deps.unlock --unused",
+        "format",
+        "credo --strict",
+        "test"
+      ]
     ]
   end
 end

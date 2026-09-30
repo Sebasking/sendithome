@@ -1,0 +1,260 @@
+defmodule ShipperDirectory.Directory.Company do
+  @moduledoc """
+  A Caribbean barrel/freight shipper. The presence check decides where it
+  goes. A company with its own working website is published to the
+  directory. One without a website (none, social-only, or a dead site)
+  becomes a prospect.
+  """
+  use Ash.Resource,
+    otp_app: :shipper_directory,
+    domain: ShipperDirectory.Directory,
+    data_layer: AshPostgres.DataLayer
+
+  alias ShipperDirectory.Directory.Changes.SetMatchKeys
+  alias ShipperDirectory.Directory.Types.{CompanyStatus, PresenceStatus, Service}
+
+  @contact_fields [
+    :name,
+    :phone,
+    :email,
+    :address,
+    :city,
+    :state,
+    :lat,
+    :lng,
+    :website_url,
+    :facebook_url,
+    :instagram_url,
+    :yelp_url,
+    :google_place_id,
+    :fmc_license_no,
+    :services,
+    :origin_metros,
+    :destinations,
+    :source,
+    :notes
+  ]
+
+  postgres do
+    table "companies"
+    repo ShipperDirectory.Repo
+
+    references do
+      reference :possible_duplicate_of, on_delete: :nilify
+    end
+  end
+
+  actions do
+    defaults [:read, :destroy]
+
+    create :create do
+      accept @contact_fields ++
+               [
+                 :slug,
+                 :status,
+                 :presence_status,
+                 :review_reason,
+                 :hold_for_review,
+                 :needs_triage,
+                 :possible_duplicate_of_id
+               ]
+
+      change SetMatchKeys
+    end
+
+    update :update do
+      require_atomic? false
+      accept @contact_fields
+      change SetMatchKeys
+    end
+
+    update :record_presence do
+      accept [:presence_status, :status, :review_reason, :last_checked_at]
+    end
+
+    update :approve_listing do
+      description "Admin confirms the website belongs to this company and publishes it."
+      change set_attribute(:presence_status, :listed)
+      change set_attribute(:status, :published)
+      change set_attribute(:review_reason, nil)
+      change set_attribute(:hold_for_review, false)
+    end
+
+    update :reject_listing do
+      description "Admin decides the website isn't really theirs, which makes the company a prospect."
+      change set_attribute(:presence_status, :dead_site)
+      change set_attribute(:status, :prospect)
+      change set_attribute(:review_reason, nil)
+      change set_attribute(:hold_for_review, false)
+    end
+
+    update :set_status do
+      accept [:status]
+    end
+
+    update :set_website do
+      description "Admin enters the website by hand (e.g. after looking the company up on Google Maps)."
+      accept [:website_url]
+      change set_attribute(:hold_for_review, false)
+    end
+
+    update :record_google do
+      accept [
+        :google_place_id,
+        :google_has_website,
+        :google_checked_at,
+        :presence_status,
+        :status,
+        :review_reason
+      ]
+    end
+
+    update :confirm_caribbean do
+      change set_attribute(:needs_triage, false)
+    end
+
+    update :exclude do
+      description "Not a Caribbean shipper. Kept (with its sightings) so discovery won't recreate it."
+      change set_attribute(:needs_triage, false)
+      change set_attribute(:status, :excluded)
+      change set_attribute(:possible_duplicate_of_id, nil)
+    end
+
+    update :dismiss_duplicate do
+      change set_attribute(:possible_duplicate_of_id, nil)
+    end
+
+    read :find_match do
+      description "Existing company with the same normalized phone or name + address."
+      argument :normalized_phone, :string
+      argument :name_key, :string, allow_nil?: false
+
+      filter expr(
+               (not is_nil(^arg(:normalized_phone)) and
+                  normalized_phone == ^arg(:normalized_phone)) or
+                 name_key == ^arg(:name_key)
+             )
+    end
+
+    read :review_queue do
+      filter expr(presence_status == :needs_review and status != :excluded)
+      prepare build(sort: [:name])
+    end
+
+    read :triage_queue do
+      filter expr(needs_triage and status != :excluded)
+      prepare build(sort: [:state, :city, :name])
+    end
+
+    read :duplicate_queue do
+      filter expr(not is_nil(possible_duplicate_of_id))
+      prepare build(sort: [:name], load: [:possible_duplicate_of])
+    end
+
+    read :needs_google_lookup do
+      description "Confirmed Caribbean shippers with no website, not yet looked up on Google."
+
+      filter expr(
+               not needs_triage and is_nil(google_checked_at) and is_nil(website_url) and
+                 status not in [:excluded, :do_not_contact, :declined]
+             )
+    end
+
+    read :by_name_core do
+      argument :name_core, :string, allow_nil?: false
+      filter expr(name_core == ^arg(:name_core))
+    end
+
+    read :published do
+      filter expr(status == :published)
+      prepare build(sort: [:name])
+    end
+
+    read :prospects do
+      filter expr(status in [:prospect, :contacted])
+      prepare build(sort: [:name])
+    end
+
+    read :due_for_check do
+      argument :checked_before, :utc_datetime_usec, allow_nil?: false
+
+      filter expr(
+               status not in [:do_not_contact, :excluded] and not needs_triage and
+                 (is_nil(last_checked_at) or last_checked_at < ^arg(:checked_before))
+             )
+    end
+  end
+
+  attributes do
+    uuid_primary_key :id
+
+    attribute :name, :string, allow_nil?: false, public?: true
+    attribute :slug, :string, allow_nil?: false, public?: true
+    attribute :phone, :string, public?: true
+    attribute :email, :string, public?: true
+    attribute :address, :string, public?: true
+    attribute :city, :string, public?: true
+    attribute :state, :string, public?: true
+    attribute :lat, :float, public?: true
+    attribute :lng, :float, public?: true
+
+    attribute :website_url, :string, public?: true
+    attribute :facebook_url, :string, public?: true
+    attribute :instagram_url, :string, public?: true
+    attribute :yelp_url, :string, public?: true
+    attribute :google_place_id, :string, public?: true
+    attribute :fmc_license_no, :string, public?: true
+
+    attribute :presence_status, PresenceStatus, public?: true
+
+    attribute :status, CompanyStatus,
+      allow_nil?: false,
+      default: :discovered,
+      public?: true
+
+    # Why the company is in the review queue.
+    attribute :review_reason, :string, public?: true
+
+    # Set when a person flagged this company. The presence checker then
+    # records its verdict but won't publish or demote. An admin decides.
+    attribute :hold_for_review, :boolean, allow_nil?: false, default: false, public?: true
+
+    # FMC licensees without a Caribbean keyword in their name wait here
+    # until a person confirms they're a Caribbean shipper.
+    attribute :needs_triage, :boolean, allow_nil?: false, default: false, public?: true
+
+    # Google Places terms allow storing only the place ID indefinitely, so
+    # we keep the ID plus our own derived flag, never Google's content.
+    attribute :google_has_website, :boolean, public?: true
+    attribute :google_checked_at, :utc_datetime_usec, public?: true
+
+    attribute :services, {:array, Service}, allow_nil?: false, default: [], public?: true
+    attribute :origin_metros, {:array, :string}, allow_nil?: false, default: [], public?: true
+    attribute :destinations, {:array, :string}, allow_nil?: false, default: [], public?: true
+    attribute :source, {:array, :string}, allow_nil?: false, default: [], public?: true
+    attribute :last_checked_at, :utc_datetime_usec, public?: true
+    attribute :notes, :string, public?: true
+
+    # Match keys, maintained by SetMatchKeys.
+    attribute :normalized_phone, :string
+    attribute :name_key, :string, allow_nil?: false
+    # Sorted distinctive name words, used to flag possible duplicates.
+    attribute :name_core, :string
+    attribute :dedupe_key, :string, allow_nil?: false
+
+    timestamps()
+  end
+
+  relationships do
+    belongs_to :possible_duplicate_of, __MODULE__, public?: true
+
+    has_many :sightings, ShipperDirectory.Directory.Sighting
+    has_many :presence_checks, ShipperDirectory.Directory.PresenceCheck
+    has_many :outreach_events, ShipperDirectory.Directory.OutreachEvent
+  end
+
+  identities do
+    identity :unique_slug, [:slug]
+    identity :unique_dedupe_key, [:dedupe_key]
+  end
+end
