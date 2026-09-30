@@ -29,7 +29,9 @@ defmodule ShipperDirectoryWeb.Admin.CompaniesLive do
      assign(socket,
        views: Enum.map(@views, fn {key, label, _} -> {key, label} end),
        crm_statuses: @crm_statuses,
-       checking: MapSet.new()
+       checking: MapSet.new(),
+       page_title: "Admin",
+       noindex: true
      )}
   end
 
@@ -153,7 +155,7 @@ defmodule ShipperDirectoryWeb.Admin.CompaniesLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} admin>
       <.header>
         Companies
         <:subtitle>
@@ -206,7 +208,7 @@ defmodule ShipperDirectoryWeb.Admin.CompaniesLive do
         <.table id="companies" rows={@companies} row_id={&"company-#{&1.id}"}>
           <:col :let={c} label="Company">
             <div class="font-medium">
-              {c.name}
+              <.link navigate={~p"/admin/companies/#{c.id}"} class="hover:underline">{c.name}</.link>
               <span
                 :if={c.fmc_license_no}
                 class="badge badge-xs badge-info ml-1"

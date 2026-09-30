@@ -104,4 +104,33 @@ defmodule ShipperDirectoryWeb.Admin.CompaniesLiveTest do
 
     assert Directory.get_company!(c.id).website_url == "https://barrelit.example"
   end
+
+  test "edit page saves details and shows the derived route keys", %{conn: conn} do
+    c = Directory.create_company!(%{name: "Dennis Shipping", status: :published})
+
+    {:ok, view, html} = live(authed(conn), ~p"/admin/companies/#{c.id}")
+    assert html =~ "none (won&#39;t appear on route pages)"
+
+    html =
+      view
+      |> form("#company-form",
+        company: %{
+          name: "Dennis Shipping",
+          city: "Brooklyn",
+          state: "NY",
+          destinations: "Jamaica, T&T",
+          sailing_schedule: "Weekly"
+        }
+      )
+      |> render_submit(%{"company" => %{"services" => ["", "barrel", "box"]}})
+
+    assert html =~ "Route destinations: Jamaica, Trinidad &amp; Tobago"
+
+    assert %{
+             destinations: ["Jamaica", "T&T"],
+             services: [:barrel, :box],
+             metro_slugs: ["brooklyn"],
+             sailing_schedule: "Weekly"
+           } = Directory.get_company!(c.id)
+  end
 end

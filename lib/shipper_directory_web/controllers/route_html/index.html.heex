@@ -1,0 +1,12 @@
+<Layouts.app flash={@flash}>
+  <header class="space-y-2">
+    <h1 class="text-3xl font-bold tracking-tight">Barrel shipping routes</h1>
+    <p class="opacity-70">Where our listed shippers ship from, and where they ship to.</p>
+  </header>
+
+  <div class="grid gap-8 pt-4 sm:grid-cols-2">
+    <.route_links :for={{metro, routes} <- @by_metro} routes={routes} title={"From " <> metro} />
+  </div>
+
+  <p :if={@by_metro == []} class="opacity-70">No routes yet.</p>
+</Layouts.app>

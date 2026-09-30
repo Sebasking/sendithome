@@ -21,13 +21,22 @@ defmodule ShipperDirectoryWeb.Router do
   scope "/", ShipperDirectoryWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live "/", DirectoryLive, :index
+    get "/shippers/:slug", CompanyController, :show
+    get "/ship-barrel", RouteController, :index
+    get "/ship-barrel/:route", RouteController, :show
+  end
+
+  scope "/", ShipperDirectoryWeb do
+    get "/sitemap.xml", SitemapController, :index
+    get "/robots.txt", SitemapController, :robots
   end
 
   scope "/admin", ShipperDirectoryWeb.Admin do
     pipe_through [:browser, :admin]
 
     live "/", CompaniesLive, :index
+    live "/companies/:id", CompanyEditLive, :edit
     get "/prospects.csv", ProspectExportController, :index
   end
 

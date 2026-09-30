@@ -1,0 +1,25 @@
+<Layouts.app flash={@flash}>
+  <nav class="text-sm opacity-70">
+    <.link navigate={~p"/ship-barrel"} class="hover:underline">Routes</.link>
+    <span class="mx-1">/</span> {@route.metro_name} to {@route.destination_name}
+  </nav>
+
+  <header class="space-y-3">
+    <h1 class="text-3xl font-bold tracking-tight">
+      Ship a barrel from {@route.metro_name} to {@route.destination_name}
+    </h1>
+    <p class="max-w-3xl opacity-80">
+      {length(@companies)} {if length(@companies) == 1, do: "shipper", else: "shippers"} in {@route.metro_name} list {@route.destination_name} as a destination.
+      Each one has a website we've checked is live. Contact them directly for rates, pickup, and sailing dates.
+    </p>
+  </header>
+
+  <div class="grid gap-4 pt-2 sm:grid-cols-2 lg:grid-cols-3">
+    <.company_card :for={company <- @companies} company={company} />
+  </div>
+
+  <div class="grid gap-8 pt-8 sm:grid-cols-2">
+    <.route_links routes={@same_origin} title={"More from " <> @route.metro_name} />
+    <.route_links routes={@same_destination} title={"More to " <> @route.destination_name} />
+  </div>
+</Layouts.app>

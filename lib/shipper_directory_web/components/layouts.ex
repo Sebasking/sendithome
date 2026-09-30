@@ -31,29 +31,44 @@ defmodule ShipperDirectoryWeb.Layouts do
     default: nil,
     doc: "the current [scope](https://phoenix.hexdocs.pm/scopes.html)"
 
+  attr :admin, :boolean, default: false, doc: "admin pages get a wider layout and admin nav"
+
   slot :inner_block, required: true
 
   def app(assigns) do
     ~H"""
-    <header class="navbar border-b border-base-300 px-4 sm:px-6 lg:px-8">
-      <div class="flex-1">
-        <.link navigate={~p"/"} class="text-lg font-semibold tracking-tight">
-          Caribbean Shipper Directory
+    <header class="border-b border-base-300 bg-base-100/80 backdrop-blur sticky top-0 z-10">
+      <nav class="mx-auto max-w-6xl flex items-center gap-3 px-4 py-3 sm:gap-6 sm:px-6">
+        <.link navigate={~p"/"} class="flex items-center gap-2 font-semibold tracking-tight">
+          <span class="grid size-8 place-items-center rounded-lg bg-primary text-primary-content">
+            <.icon name="hero-cube" class="size-5" />
+          </span>
+          <span class="hidden sm:inline">Caribbean Shipper Directory</span>
         </.link>
-      </div>
-      <div class="flex-none">
-        <ul class="flex px-1 space-x-4 items-center">
-          <li><.link navigate={~p"/admin"} class="btn btn-ghost btn-sm">Admin</.link></li>
-          <li><.theme_toggle /></li>
-        </ul>
-      </div>
+        <div class="ml-auto flex items-center gap-1 text-sm">
+          <%= if @admin do %>
+            <.link navigate={~p"/admin"} class="btn btn-ghost btn-sm">Admin</.link>
+          <% else %>
+            <.link navigate={~p"/"} class="btn btn-ghost btn-sm">Find a shipper</.link>
+            <.link navigate={~p"/ship-barrel"} class="btn btn-ghost btn-sm">Routes</.link>
+          <% end %>
+          <div class="hidden sm:block"><.theme_toggle /></div>
+        </div>
+      </nav>
     </header>
 
     <main class="px-4 py-10 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-7xl space-y-4">
+      <div class={["mx-auto space-y-4", if(@admin, do: "max-w-7xl", else: "max-w-6xl")]}>
         {render_slot(@inner_block)}
       </div>
     </main>
+
+    <footer :if={!@admin} class="border-t border-base-300 py-8 text-sm opacity-70">
+      <div class="mx-auto max-w-6xl px-4 sm:px-6 flex flex-wrap gap-x-6 gap-y-2">
+        <span>Only shippers with a verified, working website are listed.</span>
+        <.link navigate={~p"/ship-barrel"} class="link">All routes</.link>
+      </div>
+    </footer>
 
     <.flash_group flash={@flash} />
     """

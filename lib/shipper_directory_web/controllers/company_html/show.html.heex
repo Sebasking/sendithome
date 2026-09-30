@@ -1,0 +1,94 @@
+<Layouts.app flash={@flash}>
+  <nav class="text-sm opacity-70">
+    <.link navigate={~p"/"} class="hover:underline">Shippers</.link>
+    <span class="mx-1">/</span> {@company.name}
+  </nav>
+
+  <div class="grid gap-8 lg:grid-cols-3">
+    <div class="space-y-6 lg:col-span-2">
+      <header class="space-y-2">
+        <div class="flex flex-wrap items-center gap-3">
+          <h1 class="text-3xl font-bold tracking-tight">{@company.name}</h1>
+          <.fmc_badge company={@company} />
+        </div>
+        <p :if={location(@company)} class="opacity-70">
+          <.icon name="hero-map-pin-micro" class="size-4 -mt-0.5" /> {location(@company)}
+        </p>
+      </header>
+
+      <section :if={@company.destinations != []} class="space-y-2">
+        <h2 class="text-sm font-semibold uppercase tracking-wide opacity-60">Ships to</h2>
+        <div class="flex flex-wrap gap-2">
+          <span
+            :for={destination <- @company.destinations}
+            class="rounded-full bg-base-200 px-3 py-1 text-sm font-medium"
+          >
+            {destination}
+          </span>
+        </div>
+      </section>
+
+      <section :if={@company.services != []} class="space-y-2">
+        <h2 class="text-sm font-semibold uppercase tracking-wide opacity-60">Services</h2>
+        <div class="flex flex-wrap gap-2">
+          <span
+            :for={service <- @company.services}
+            class="rounded-full border border-base-300 px-3 py-1 text-sm capitalize"
+          >
+            {service}
+          </span>
+        </div>
+      </section>
+
+      <section :if={@company.sailing_schedule} class="space-y-2">
+        <h2 class="text-sm font-semibold uppercase tracking-wide opacity-60">Sailing schedule</h2>
+        <p>{@company.sailing_schedule}</p>
+      </section>
+
+      <.route_links routes={@routes} title="Routes" />
+    </div>
+
+    <aside class="h-fit space-y-4 rounded-2xl border border-base-300 p-6">
+      <h2 class="font-semibold">Contact</h2>
+      <a
+        href={@company.website_url}
+        target="_blank"
+        rel="noopener"
+        class="btn btn-primary w-full"
+      >
+        Visit website <.icon name="hero-arrow-top-right-on-square-micro" class="size-4" />
+      </a>
+      <dl class="space-y-3 text-sm">
+        <div :if={@company.phone}>
+          <dt class="opacity-60">Phone</dt>
+          <dd>
+            <a
+              href={"tel:" <> String.replace(@company.phone, ~r/[^\d+]/, "")}
+              class="hover:text-primary"
+            >
+              {@company.phone}
+            </a>
+          </dd>
+        </div>
+        <div :if={@company.email}>
+          <dt class="opacity-60">Email</dt>
+          <dd>
+            <a href={"mailto:" <> @company.email} class="hover:text-primary">{@company.email}</a>
+          </dd>
+        </div>
+        <div :if={@company.address}>
+          <dt class="opacity-60">Address</dt>
+          <dd>{@company.address}<br />{location(@company)}</dd>
+        </div>
+        <div :if={@company.fmc_license_no}>
+          <dt class="opacity-60">FMC license</dt>
+          <dd>{@company.fmc_license_no}</dd>
+        </div>
+        <div :if={@company.last_checked_at}>
+          <dt class="opacity-60">Website verified</dt>
+          <dd>{Calendar.strftime(@company.last_checked_at, "%B %-d, %Y")}</dd>
+        </div>
+      </dl>
+    </aside>
+  </div>
+</Layouts.app>

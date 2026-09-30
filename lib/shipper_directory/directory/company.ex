@@ -10,7 +10,7 @@ defmodule ShipperDirectory.Directory.Company do
     domain: ShipperDirectory.Directory,
     data_layer: AshPostgres.DataLayer
 
-  alias ShipperDirectory.Directory.Changes.SetMatchKeys
+  alias ShipperDirectory.Directory.Changes.{SetMatchKeys, SetSearchKeys}
   alias ShipperDirectory.Directory.Types.{CompanyStatus, PresenceStatus, Service}
 
   @contact_fields [
@@ -32,7 +32,8 @@ defmodule ShipperDirectory.Directory.Company do
     :origin_metros,
     :destinations,
     :source,
-    :notes
+    :notes,
+    :sailing_schedule
   ]
 
   postgres do
@@ -60,12 +61,14 @@ defmodule ShipperDirectory.Directory.Company do
                ]
 
       change SetMatchKeys
+      change SetSearchKeys
     end
 
     update :update do
       require_atomic? false
       accept @contact_fields
       change SetMatchKeys
+      change SetSearchKeys
     end
 
     update :record_presence do
@@ -170,6 +173,26 @@ defmodule ShipperDirectory.Directory.Company do
       prepare build(sort: [:name])
     end
 
+    read :search do
+      description "Public directory search. Only published companies, ever."
+      argument :metro, :string
+      argument :destination, :string
+      argument :service, :string
+
+      filter expr(status == :published)
+
+      filter expr(is_nil(^arg(:metro)) or fragment("? = ANY(?)", ^arg(:metro), metro_slugs))
+
+      filter expr(
+               is_nil(^arg(:destination)) or
+                 fragment("? = ANY(?)", ^arg(:destination), destination_slugs)
+             )
+
+      filter expr(is_nil(^arg(:service)) or fragment("? = ANY(?)", ^arg(:service), services))
+
+      prepare build(sort: [:name])
+    end
+
     read :prospects do
       filter expr(status in [:prospect, :contacted])
       prepare build(sort: [:name])
@@ -232,6 +255,12 @@ defmodule ShipperDirectory.Directory.Company do
     attribute :origin_metros, {:array, :string}, allow_nil?: false, default: [], public?: true
     attribute :destinations, {:array, :string}, allow_nil?: false, default: [], public?: true
     attribute :source, {:array, :string}, allow_nil?: false, default: [], public?: true
+    attribute :sailing_schedule, :string, public?: true
+
+    # Canonical slugs derived by SetSearchKeys, for search and route pages.
+    attribute :metro_slugs, {:array, :string}, allow_nil?: false, default: [], public?: true
+    attribute :destination_slugs, {:array, :string}, allow_nil?: false, default: [], public?: true
+
     attribute :last_checked_at, :utc_datetime_usec, public?: true
     attribute :notes, :string, public?: true
 

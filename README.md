@@ -18,7 +18,8 @@ mix run priv/repo/seeds.exs     # import seed CSV + run presence checks
 mix phx.server
 ```
 
-- Directory: http://localhost:4000
+- Directory: http://localhost:4000 (search), `/ship-barrel` (routes),
+  `/shippers/:slug` (company pages)
 - Admin: http://localhost:4000/admin (dev basic auth `admin` / `admin`; prod uses
   `ADMIN_USERNAME` / `ADMIN_PASSWORD`)
 
@@ -33,6 +34,7 @@ mix directory.import_seed [path.csv]      # idempotent CSV import
 mix directory.check_presence [slug ...]   # run presence checks now, print verdicts
 mix directory.import_fmc [--metros brooklyn,queens|all] [--file list.xlsx]
 mix directory.google_lookup [--limit N]   # needs GOOGLE_PLACES_API_KEY
+mix directory.refresh_search_keys         # after changing Metros/Destinations aliases
 mix precommit                             # compile, format, credo --strict, test
 ```
 
@@ -73,6 +75,30 @@ allow only 24h caching, so neither is used as a source of stored contact data.
 
 Triage "Not Caribbean" sets status `excluded`. The company and its sightings
 are kept so reruns don't recreate it.
+
+## Public directory (P2)
+
+Only `status: published` companies are ever shown. The `:search` read action
+filters on it, and company pages and route pages 404 for everything else.
+
+| Path | What |
+| --- | --- |
+| `/?from=brooklyn&to=guyana&service=barrel` | `DirectoryLive`: search. Filters live in the URL. |
+| `/shippers/:slug` | Company page with contact, destinations, services, sailing schedule, FMC license, verified date, and `LocalBusiness` JSON-LD |
+| `/ship-barrel` | Every route, grouped by origin |
+| `/ship-barrel/:metro-to-:destination` | SEO route page. Exists only when at least one published company serves the route (no thin pages). |
+| `/sitemap.xml`, `/robots.txt` | Generated. robots.txt disallows `/admin` and points at the sitemap. |
+
+Routes come from canonical slugs derived on every save (`SetSearchKeys`):
+`metro_slugs` from city/origin metros via `Metros` aliases ("Lauderhill" →
+`broward`; "Jamaica" → `queens` only when the state is NY), and
+`destination_slugs` via `Destinations` aliases ("T&T" →
+`trinidad-and-tobago`). A generic "Caribbean" maps to no destination.
+`/admin/companies/:id` edits a company and shows which metros and
+destinations it maps to.
+
+Canonical and sitemap URLs come from the endpoint's `url` config, so set
+`PHX_HOST` in production.
 
 ## Domain: `ShipperDirectory.Directory`
 
@@ -119,5 +145,5 @@ Manhattan 51, Staten Island 17, Bronx 16, minus the seed matches). 4 new ones we
 
 ## Not built yet
 
-Google keyword-grid discovery (dropped with the ToS decision), Yelp, public
-search + SEO routes, claim flow, outreach CRM UI, leads.
+Google keyword-grid discovery (dropped with the ToS decision), Yelp, claim
+flow (P3), outreach CRM UI (P3), leads and paid placement (P4).

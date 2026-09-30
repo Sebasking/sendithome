@@ -15,6 +15,8 @@ defmodule ShipperDirectory.Directory do
       define :find_matching_companies, action: :find_match, args: [:normalized_phone, :name_key]
       define :review_queue, action: :review_queue
       define :published_companies, action: :published
+      define :get_published_company, action: :published, get_by: [:slug]
+      define :search_companies, action: :search
       define :prospects, action: :prospects
       define :companies_due_for_check, action: :due_for_check, args: [:checked_before]
       define :record_presence, action: :record_presence
