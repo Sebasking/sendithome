@@ -57,6 +57,24 @@ defmodule ShipperDirectoryWeb.DirectoryComponents do
     """
   end
 
+  attr :companies, :list, required: true
+
+  def sponsored_block(assigns) do
+    ~H"""
+    <section :if={@companies != []} id="sponsored" class="space-y-3">
+      <h2 class="text-xs font-semibold uppercase tracking-wide opacity-60">Sponsored</h2>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div :for={company <- @companies} class="relative">
+          <span class="absolute right-3 -top-2 z-[1] rounded-full bg-warning px-2 py-0.5 text-[10px] font-semibold uppercase text-warning-content">
+            Sponsored
+          </span>
+          <.company_card company={company} />
+        </div>
+      </div>
+    </section>
+    """
+  end
+
   attr :company, :map, required: true
 
   def fmc_badge(assigns) do

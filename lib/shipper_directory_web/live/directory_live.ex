@@ -8,7 +8,7 @@ defmodule ShipperDirectoryWeb.DirectoryLive do
 
   import ShipperDirectoryWeb.DirectoryComponents
 
-  alias ShipperDirectory.Directory
+  alias ShipperDirectory.{Directory, Placements}
   alias ShipperDirectory.Directory.{Destinations, RoutePages}
   alias ShipperDirectory.Directory.Types.Service
   alias ShipperDirectory.Discovery.Metros
@@ -42,11 +42,14 @@ defmodule ShipperDirectoryWeb.DirectoryLive do
         service: filters["service"]
       })
 
+    {sponsored, organic} = Placements.split(companies, filters["from"], filters["to"])
+
     {:noreply,
      assign(socket,
        filters: filters,
        form: to_form(filters, as: :search),
-       companies: companies,
+       companies: organic,
+       sponsored: sponsored,
        canonical_url: canonical_url(filters)
      )}
   end
@@ -111,10 +114,14 @@ defmodule ShipperDirectoryWeb.DirectoryLive do
         </.form>
       </section>
 
+      <.sponsored_block companies={@sponsored} />
+
       <section class="space-y-4 pt-4">
         <div class="flex items-baseline justify-between">
           <h2 class="text-xl font-semibold">
-            {length(@companies)} {if length(@companies) == 1, do: "shipper", else: "shippers"}
+            {length(@companies) + length(@sponsored)} {if length(@companies) + length(@sponsored) == 1,
+              do: "shipper",
+              else: "shippers"}
           </h2>
           <.link
             :if={@filters != %{"from" => nil, "to" => nil, "service" => nil}}
@@ -130,7 +137,7 @@ defmodule ShipperDirectoryWeb.DirectoryLive do
         </div>
 
         <div
-          :if={@companies == []}
+          :if={@companies == [] and @sponsored == []}
           class="rounded-2xl border border-dashed border-base-300 p-10 text-center"
         >
           <p class="font-medium">No listed shippers match yet.</p>

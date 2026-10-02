@@ -105,6 +105,9 @@ config :shipper_directory, ShipperDirectory.Mailer, adapter: Swoosh.Adapters.Loc
 config :shipper_directory, :mail_from, {"Caribbean Shipper Directory", "noreply@example.com"}
 config :shipper_directory, :phone_sender, ShipperDirectory.Claims.PhoneSender.Log
 
+# Pay-per-lead price, fixed on each delivery when sent. 0 = free beta.
+config :shipper_directory, :lead_price_cents, 0
+
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.25.4",

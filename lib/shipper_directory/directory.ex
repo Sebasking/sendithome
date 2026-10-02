@@ -29,6 +29,8 @@ defmodule ShipperDirectory.Directory do
       define :owner_update_company, action: :owner_update
       define :assign_owner, action: :assign_owner, args: [:owner_id]
       define :remove_owner, action: :remove_owner
+      define :set_accepts_leads, action: :set_accepts_leads, args: [:accepts_leads]
+      define :lead_eligible_companies, action: :lead_eligible
       define :companies_owned_by, action: :owned_by, args: [:owner_id]
       define :record_google, action: :record_google
       define :confirm_caribbean, action: :confirm_caribbean
@@ -59,6 +61,31 @@ defmodule ShipperDirectory.Directory do
     resource ShipperDirectory.Directory.OutreachEvent do
       define :log_outreach, action: :create
       define :outreach_for_company, action: :for_company, args: [:company_id]
+    end
+
+    resource ShipperDirectory.Directory.Lead do
+      define :create_lead, action: :create
+      define :get_lead, action: :read, get_by: [:id]
+      define :recent_leads, action: :recent
+      define :recent_leads_from_contact, action: :recent_from_contact
+    end
+
+    resource ShipperDirectory.Directory.LeadDelivery do
+      define :create_lead_delivery, action: :create
+      define :get_lead_delivery, action: :read, get_by: [:id]
+      define :owner_update_lead_delivery, action: :owner_update
+      define :resolve_dispute, action: :resolve_dispute, args: [:accept?]
+      define :lead_deliveries_for_owner, action: :for_owner, args: [:owner_id]
+      define :disputed_lead_deliveries, action: :disputed
+      define :billable_lead_deliveries, action: :billable_between, args: [:from, :to]
+    end
+
+    resource ShipperDirectory.Directory.Placement do
+      define :create_placement, action: :create
+      define :get_placement, action: :read, get_by: [:id]
+      define :end_placement, action: :end_now
+      define :active_placements, action: :active_for, args: [:metro, :destination, :on]
+      define :list_placements, action: :listing
     end
 
     resource ShipperDirectory.Directory.Claim do

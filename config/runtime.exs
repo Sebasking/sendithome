@@ -42,6 +42,10 @@ end
 
 if config_env() != :test do
   config :shipper_directory, :google_places_api_key, System.get_env("GOOGLE_PLACES_API_KEY")
+
+  if price = System.get_env("LEAD_PRICE_CENTS") do
+    config :shipper_directory, :lead_price_cents, String.to_integer(price)
+  end
 end
 
 if config_env() == :prod do

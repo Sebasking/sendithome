@@ -57,11 +57,18 @@
 
     <aside class="h-fit space-y-4 rounded-2xl border border-base-300 p-6">
       <h2 class="font-semibold">Contact</h2>
+      <.link
+        :if={@quotes?}
+        navigate={~p"/quote?#{[company: @company.slug]}"}
+        class="btn btn-primary w-full"
+      >
+        Get a quote
+      </.link>
       <a
         href={@company.website_url}
         target="_blank"
         rel="noopener"
-        class="btn btn-primary w-full"
+        class={["btn w-full", if(@quotes?, do: "btn-outline", else: "btn-primary")]}
       >
         Visit website <.icon name="hero-arrow-top-right-on-square-micro" class="size-4" />
       </a>

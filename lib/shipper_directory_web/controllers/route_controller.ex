@@ -1,7 +1,7 @@
 defmodule ShipperDirectoryWeb.RouteController do
   use ShipperDirectoryWeb, :controller
 
-  alias ShipperDirectory.Directory
+  alias ShipperDirectory.{Directory, Leads, Placements}
   alias ShipperDirectory.Directory.RoutePages
   alias ShipperDirectoryWeb.NotFoundError
 
@@ -29,10 +29,13 @@ defmodule ShipperDirectoryWeb.RouteController do
 
     route = RoutePages.build(metro, destination, length(companies))
     available = RoutePages.available()
+    {sponsored, organic} = Placements.split(companies, metro, destination)
 
     render(conn, :show,
       route: route,
-      companies: companies,
+      companies: organic,
+      sponsored: sponsored,
+      quotes?: Leads.eligible(metro, destination) != [],
       same_origin: Enum.filter(available, &(&1.metro == metro and &1.destination != destination)),
       same_destination:
         Enum.filter(available, &(&1.destination == destination and &1.metro != metro)),

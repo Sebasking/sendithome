@@ -33,6 +33,7 @@ defmodule ShipperDirectoryWeb.Router do
       on_mount: {ShipperDirectoryWeb.LiveUserAuth, :live_user_required} do
       live "/my/listings", Owner.MyListingsLive, :index
       live "/my/listings/:slug", Owner.ListingEditLive, :edit
+      live "/my/leads", Owner.LeadsLive, :index
     end
 
     # Public pages. A signed-in owner is optional.
@@ -40,6 +41,7 @@ defmodule ShipperDirectoryWeb.Router do
       on_mount: {ShipperDirectoryWeb.LiveUserAuth, :live_user_optional} do
       live "/", DirectoryLive, :index
       live "/shippers/:slug/claim", ClaimLive, :new
+      live "/quote", QuoteLive, :new
     end
   end
 
@@ -79,6 +81,9 @@ defmodule ShipperDirectoryWeb.Router do
     live "/", CompaniesLive, :index
     live "/companies/:id", CompanyEditLive, :edit
     live "/prospects", ProspectsLive, :index
+    live "/leads", LeadsLive, :index
+    live "/placements", PlacementsLive, :index
+    get "/ledger.csv", LedgerExportController, :index
     get "/prospects.csv", ProspectExportController, :index
   end
 

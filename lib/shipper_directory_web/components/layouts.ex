@@ -51,11 +51,14 @@ defmodule ShipperDirectoryWeb.Layouts do
             <% @admin -> %>
               <.link navigate={~p"/admin"} class="btn btn-ghost btn-sm">Companies</.link>
               <.link navigate={~p"/admin/prospects"} class="btn btn-ghost btn-sm">Outreach</.link>
+              <.link navigate={~p"/admin/leads"} class="btn btn-ghost btn-sm">Leads</.link>
+              <.link navigate={~p"/admin/placements"} class="btn btn-ghost btn-sm">Placements</.link>
             <% @current_user -> %>
               <.link navigate={~p"/"} class="btn btn-ghost btn-sm hidden sm:inline-flex">
                 Find a shipper
               </.link>
               <.link navigate={~p"/my/listings"} class="btn btn-ghost btn-sm">My listings</.link>
+              <.link navigate={~p"/my/leads"} class="btn btn-ghost btn-sm">Requests</.link>
               <.link href={~p"/sign-out"} class="btn btn-ghost btn-sm">Sign out</.link>
             <% true -> %>
               <.link navigate={~p"/"} class="btn btn-ghost btn-sm">Find a shipper</.link>

@@ -50,6 +50,7 @@ mix precommit                             # compile, format, credo --strict, tes
   Prod also needs a Swoosh adapter configured in `config/runtime.exs`
   (e.g. Postmark or Resend). Dev mail shows at `/dev/mailbox`.
 - `ADMIN_EMAIL`: receives the daily follow-up digest.
+- `LEAD_PRICE_CENTS`: price per delivered quote request (default 0 = free beta).
 
 ## Discovery (P1)
 
@@ -140,6 +141,32 @@ not interested → declined, customer, do-not-contact) and enforces:
 The app doesn't send cold outreach itself. When it does (CAN-SPAM), add a
 physical address and an unsubscribe link.
 
+## Leads and placements (P4)
+
+**Pay-per-lead** (`ShipperDirectory.Leads`, `/quote`): "Get free quotes" on
+route pages and "Get a quote" on company pages open one form that goes to up
+to 3 shippers **the consumer picks**. The consent text naming exactly those
+shippers is built on the server and stored on the `Lead`.
+- Only published, claimed listings whose owner turned on "Receive quote
+  requests" (`accepts_leads`, with the price shown) get leads, so nobody is
+  billed without agreeing. Buttons only appear when someone can receive.
+- Each `LeadDelivery` locks in `LEAD_PRICE_CENTS` when it's sent. The shipper
+  gets an email, works the request at `/my/leads`, and can dispute it. An
+  admin accepting a dispute marks it `credited`.
+- `/admin/leads`: disputes, a monthly ledger per company (credited and free
+  deliveries excluded) with CSV export for invoicing, and recent requests.
+- Abuse: honeypot field, at most 3 requests per email/phone per day.
+
+**Sponsored placements** (`ShipperDirectory.Placements`, `/admin/placements`):
+admin-recorded slots (sold and invoiced offline) for one route or every route
+from a metro, with dates and price. Active sponsors show in a block labeled
+"Sponsored" above organic results on route pages and metro searches, and
+aren't repeated below. A metro-wide sponsor only shows on routes it serves.
+Max 2 overlapping per slot.
+
+Not built: online payment (Stripe) for leads or placements, click/impression
+reporting for sponsors, and booking commission (9.4).
+
 ## Domain: `ShipperDirectory.Directory`
 
 - **Company**: `presence_status` (from the checker; `nil` = unchecked) and
@@ -151,6 +178,9 @@ physical address and an unsubscribe link.
 - **OutreachEvent**: CRM touchpoints (resource only, no UI yet).
 - **DiscoveryRun**: one FMC import (params, counts, error).
 - **Claim**: one claim attempt (method, destination, code hash, attempts, status).
+- **Lead** / **LeadDelivery**: a consumer quote request and its per-shipper,
+  priced deliveries.
+- **Placement**: a sponsored slot (metro, optional destination, dates, price).
 
 `ShipperDirectory.Accounts`: `User` (listing owners, magic link only) and `Token`.
 
@@ -188,5 +218,5 @@ Manhattan 51, Staten Island 17, Bronx 16, minus the seed matches). 4 new ones we
 
 ## Not built yet
 
-Google keyword-grid discovery (dropped with the ToS decision), Yelp, leads
-and paid placement (P4).
+Google keyword-grid discovery (dropped with the ToS decision), Yelp, online
+payments, sponsor analytics, booking commission.

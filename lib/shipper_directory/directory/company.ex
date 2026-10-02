@@ -125,9 +125,38 @@ defmodule ShipperDirectory.Directory.Company do
       change set_attribute(:claimed_at, &DateTime.utc_now/0)
     end
 
+    update :set_accepts_leads do
+      description "The owner opts in (or out) of pay-per-lead quote requests."
+      require_atomic? false
+      accept [:accepts_leads]
+
+      change fn changeset, _context ->
+        at = if Ash.Changeset.get_attribute(changeset, :accepts_leads), do: DateTime.utc_now()
+        Ash.Changeset.force_change_attribute(changeset, :leads_terms_accepted_at, at)
+      end
+    end
+
+    read :lead_eligible do
+      description "Published, claimed, and opted in to quote requests."
+      argument :metro, :string
+      argument :destination, :string
+
+      filter expr(status == :published and not is_nil(owner_id) and accepts_leads)
+
+      filter expr(is_nil(^arg(:metro)) or fragment("? = ANY(?)", ^arg(:metro), metro_slugs))
+
+      filter expr(
+               is_nil(^arg(:destination)) or
+                 fragment("? = ANY(?)", ^arg(:destination), destination_slugs)
+             )
+
+      prepare build(sort: [:name])
+    end
+
     update :remove_owner do
       change set_attribute(:owner_id, nil)
       change set_attribute(:claimed_at, nil)
+      change set_attribute(:accepts_leads, false)
     end
 
     read :owned_by do
@@ -310,6 +339,10 @@ defmodule ShipperDirectory.Directory.Company do
 
     attribute :claimed_at, :utc_datetime_usec, public?: true
 
+    # Pay-per-lead is opt-in: only owners who accepted the terms get leads.
+    attribute :accepts_leads, :boolean, allow_nil?: false, default: false, public?: true
+    attribute :leads_terms_accepted_at, :utc_datetime_usec, public?: true
+
     # TCPA: SMS/WhatsApp outreach only after the company opts in.
     attribute :messaging_consent_at, :utc_datetime_usec, public?: true
     attribute :messaging_consent_note, :string, public?: true
@@ -331,6 +364,8 @@ defmodule ShipperDirectory.Directory.Company do
     belongs_to :possible_duplicate_of, __MODULE__, public?: true
     belongs_to :owner, ShipperDirectory.Accounts.User, public?: true
     has_many :claims, ShipperDirectory.Directory.Claim
+    has_many :lead_deliveries, ShipperDirectory.Directory.LeadDelivery
+    has_many :placements, ShipperDirectory.Directory.Placement
 
     has_many :sightings, ShipperDirectory.Directory.Sighting
     has_many :presence_checks, ShipperDirectory.Directory.PresenceCheck

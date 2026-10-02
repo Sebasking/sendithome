@@ -1,7 +1,7 @@
 defmodule ShipperDirectoryWeb.CompanyController do
   use ShipperDirectoryWeb, :controller
 
-  alias ShipperDirectory.Directory
+  alias ShipperDirectory.{Directory, Leads}
   alias ShipperDirectory.Directory.RoutePages
   alias ShipperDirectoryWeb.{DirectoryComponents, NotFoundError}
 
@@ -21,6 +21,7 @@ defmodule ShipperDirectoryWeb.CompanyController do
     render(conn, :show,
       company: company,
       routes: routes,
+      quotes?: Leads.eligible?(company),
       page_title: company.name,
       meta_description: meta_description(company, location),
       canonical_url: url(~p"/shippers/#{company.slug}"),
