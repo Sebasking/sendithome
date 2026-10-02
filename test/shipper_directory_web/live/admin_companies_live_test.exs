@@ -124,7 +124,7 @@ defmodule ShipperDirectoryWeb.Admin.CompaniesLiveTest do
       )
       |> render_submit(%{"company" => %{"services" => ["", "barrel", "box"]}})
 
-    assert html =~ "Route destinations: Jamaica, Trinidad &amp; Tobago"
+    assert html =~ "Route pages: Jamaica, Trinidad &amp; Tobago"
 
     assert %{
              destinations: ["Jamaica", "T&T"],

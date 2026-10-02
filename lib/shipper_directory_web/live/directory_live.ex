@@ -71,7 +71,7 @@ defmodule ShipperDirectoryWeb.DirectoryLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} current_user={@current_user}>
       <section class="rounded-3xl bg-gradient-to-br from-primary/15 via-base-200 to-base-100 px-6 py-10 sm:px-10">
         <h1 class="max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
           Ship a barrel home to the Caribbean

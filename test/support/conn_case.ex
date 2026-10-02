@@ -17,6 +17,8 @@ defmodule ShipperDirectoryWeb.ConnCase do
 
   use ExUnit.CaseTemplate
 
+  alias AshAuthentication.Plug.Helpers
+
   using do
     quote do
       # The default endpoint for testing
@@ -34,5 +36,24 @@ defmodule ShipperDirectoryWeb.ConnCase do
   setup tags do
     ShipperDirectory.DataCase.setup_sandbox(tags)
     {:ok, conn: Phoenix.ConnTest.build_conn()}
+  end
+
+  @doc "Creates a listing owner (if given an email) and signs them in on the conn."
+  def log_in_owner(conn, email) when is_binary(email) do
+    user =
+      ShipperDirectory.Accounts.User
+      |> Ash.Changeset.for_create(:register_for_claim, %{email: email})
+      |> Ash.create!(authorize?: false)
+
+    {log_in_owner(conn, user), user}
+  end
+
+  def log_in_owner(conn, user) do
+    {:ok, token, _claims} = AshAuthentication.Jwt.token_for_user(user)
+    user = Ash.Resource.put_metadata(user, :token, token)
+
+    conn
+    |> Phoenix.ConnTest.init_test_session(%{})
+    |> Helpers.store_in_session(user)
   end
 end

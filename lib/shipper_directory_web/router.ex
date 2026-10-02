@@ -1,6 +1,10 @@
 defmodule ShipperDirectoryWeb.Router do
   use ShipperDirectoryWeb, :router
 
+  use AshAuthentication.Phoenix.Router
+
+  import AshAuthentication.Plug.Helpers
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -8,6 +12,7 @@ defmodule ShipperDirectoryWeb.Router do
     plug :put_root_layout, html: {ShipperDirectoryWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :load_from_session
   end
 
   pipeline :admin do
@@ -16,15 +21,51 @@ defmodule ShipperDirectoryWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug :load_from_bearer
+    plug :set_actor, :user
   end
 
   scope "/", ShipperDirectoryWeb do
     pipe_through :browser
 
-    live "/", DirectoryLive, :index
+    # Listing owners (signed in by magic link).
+    ash_authentication_live_session :authenticated_routes,
+      on_mount: {ShipperDirectoryWeb.LiveUserAuth, :live_user_required} do
+      live "/my/listings", Owner.MyListingsLive, :index
+      live "/my/listings/:slug", Owner.ListingEditLive, :edit
+    end
+
+    # Public pages. A signed-in owner is optional.
+    ash_authentication_live_session :public,
+      on_mount: {ShipperDirectoryWeb.LiveUserAuth, :live_user_optional} do
+      live "/", DirectoryLive, :index
+      live "/shippers/:slug/claim", ClaimLive, :new
+    end
+  end
+
+  scope "/", ShipperDirectoryWeb do
+    pipe_through :browser
+
     get "/shippers/:slug", CompanyController, :show
     get "/ship-barrel", RouteController, :index
     get "/ship-barrel/:route", RouteController, :show
+    auth_routes AuthController, ShipperDirectory.Accounts.User, path: "/auth"
+
+    sign_out_route AuthController, "/sign-out",
+      overrides: [ShipperDirectoryWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+
+    # Listing owners sign in with a magic link (no passwords).
+    sign_in_route auth_routes_prefix: "/auth",
+                  on_mount: [{ShipperDirectoryWeb.LiveUserAuth, :live_no_user}],
+                  overrides: [
+                    ShipperDirectoryWeb.AuthOverrides,
+                    AshAuthentication.Phoenix.Overrides.Default
+                  ]
+
+    magic_sign_in_route(ShipperDirectory.Accounts.User, :magic_link,
+      auth_routes_prefix: "/auth",
+      overrides: [ShipperDirectoryWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+    )
   end
 
   scope "/", ShipperDirectoryWeb do
@@ -37,6 +78,7 @@ defmodule ShipperDirectoryWeb.Router do
 
     live "/", CompaniesLive, :index
     live "/companies/:id", CompanyEditLive, :edit
+    live "/prospects", ProspectsLive, :index
     get "/prospects.csv", ProspectExportController, :index
   end
 

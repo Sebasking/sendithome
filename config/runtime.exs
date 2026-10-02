@@ -93,6 +93,24 @@ if config_env() == :prod do
     ],
     secret_key_base: secret_key_base
 
+  config :shipper_directory, :phone_sender, ShipperDirectory.Claims.PhoneSender.Twilio
+
+  config :shipper_directory, :twilio,
+    account_sid: System.get_env("TWILIO_ACCOUNT_SID"),
+    auth_token: System.get_env("TWILIO_AUTH_TOKEN"),
+    from_number: System.get_env("TWILIO_FROM_NUMBER")
+
+  if from = System.get_env("MAIL_FROM") do
+    config :shipper_directory, :mail_from, {"Caribbean Shipper Directory", from}
+  end
+
+  config :shipper_directory, :admin_email, System.get_env("ADMIN_EMAIL")
+
+  config :shipper_directory,
+    token_signing_secret:
+      System.get_env("TOKEN_SIGNING_SECRET") ||
+        raise("Missing environment variable `TOKEN_SIGNING_SECRET`!")
+
   # ## SSL Support
   #
   # To get SSL working, you will need to add the `https` key

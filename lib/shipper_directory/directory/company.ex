@@ -95,6 +95,47 @@ defmodule ShipperDirectory.Directory.Company do
       accept [:status]
     end
 
+    update :record_outreach_result do
+      accept [:status, :messaging_consent_at, :messaging_consent_note]
+    end
+
+    update :owner_update do
+      description "What a verified owner may change on their own listing."
+      require_atomic? false
+
+      accept [
+        :phone,
+        :email,
+        :website_url,
+        :address,
+        :city,
+        :state,
+        :services,
+        :origin_metros,
+        :destinations,
+        :sailing_schedule
+      ]
+
+      change SetMatchKeys
+      change SetSearchKeys
+    end
+
+    update :assign_owner do
+      accept [:owner_id]
+      change set_attribute(:claimed_at, &DateTime.utc_now/0)
+    end
+
+    update :remove_owner do
+      change set_attribute(:owner_id, nil)
+      change set_attribute(:claimed_at, nil)
+    end
+
+    read :owned_by do
+      argument :owner_id, :uuid, allow_nil?: false
+      filter expr(owner_id == ^arg(:owner_id))
+      prepare build(sort: [:name])
+    end
+
     update :set_website do
       description "Admin enters the website by hand (e.g. after looking the company up on Google Maps)."
       accept [:website_url]
@@ -198,6 +239,12 @@ defmodule ShipperDirectory.Directory.Company do
       prepare build(sort: [:name])
     end
 
+    read :follow_ups_due do
+      argument :before, :utc_datetime_usec, allow_nil?: false
+      filter expr(status in [:prospect, :contacted] and next_action_at <= ^arg(:before))
+      prepare build(sort: [:next_action_at], load: [:next_action_at, :last_outcome])
+    end
+
     read :due_for_check do
       argument :checked_before, :utc_datetime_usec, allow_nil?: false
 
@@ -261,6 +308,12 @@ defmodule ShipperDirectory.Directory.Company do
     attribute :metro_slugs, {:array, :string}, allow_nil?: false, default: [], public?: true
     attribute :destination_slugs, {:array, :string}, allow_nil?: false, default: [], public?: true
 
+    attribute :claimed_at, :utc_datetime_usec, public?: true
+
+    # TCPA: SMS/WhatsApp outreach only after the company opts in.
+    attribute :messaging_consent_at, :utc_datetime_usec, public?: true
+    attribute :messaging_consent_note, :string, public?: true
+
     attribute :last_checked_at, :utc_datetime_usec, public?: true
     attribute :notes, :string, public?: true
 
@@ -276,10 +329,27 @@ defmodule ShipperDirectory.Directory.Company do
 
   relationships do
     belongs_to :possible_duplicate_of, __MODULE__, public?: true
+    belongs_to :owner, ShipperDirectory.Accounts.User, public?: true
+    has_many :claims, ShipperDirectory.Directory.Claim
 
     has_many :sightings, ShipperDirectory.Directory.Sighting
     has_many :presence_checks, ShipperDirectory.Directory.PresenceCheck
     has_many :outreach_events, ShipperDirectory.Directory.OutreachEvent
+  end
+
+  aggregates do
+    max :last_outreach_at, :outreach_events, :inserted_at
+    count :outreach_count, :outreach_events
+
+    first :last_outcome, :outreach_events, :outcome do
+      sort inserted_at: :desc
+    end
+
+    # The follow-up date set on the most recent touch.
+    first :next_action_at, :outreach_events, :next_action_at do
+      sort inserted_at: :desc
+      include_nil? true
+    end
   end
 
   identities do

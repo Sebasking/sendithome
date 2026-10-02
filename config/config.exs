@@ -14,7 +14,8 @@ config :shipper_directory, Oban,
   cron: [
     crontab: [
       {"0 6 * * *", ShipperDirectory.Workers.PresenceRecheckScheduler},
-      {"0 5 * * MON", ShipperDirectory.Workers.FmcImportWorker}
+      {"0 5 * * MON", ShipperDirectory.Workers.FmcImportWorker},
+      {"0 12 * * *", ShipperDirectory.Workers.FollowUpDigestWorker}
     ]
   ],
   lifeline: [rescue_after: {2, :hours}],
@@ -47,6 +48,9 @@ config :spark,
     remove_parens?: true,
     "Ash.Resource": [
       section_order: [
+        :authentication,
+        :token,
+        :user_identity,
         :postgres,
         :resource,
         :code_interface,
@@ -69,8 +73,9 @@ config :spark,
 
 config :shipper_directory,
   ecto_repos: [ShipperDirectory.Repo],
-  ash_domains: [ShipperDirectory.Directory],
-  generators: [timestamp_type: :utc_datetime]
+  ash_domains: [ShipperDirectory.Accounts, ShipperDirectory.Directory],
+  generators: [timestamp_type: :utc_datetime],
+  ash_authentication: [return_error_on_invalid_magic_link_token?: true]
 
 # Configure the endpoint
 config :shipper_directory, ShipperDirectoryWeb.Endpoint,
@@ -96,6 +101,9 @@ config :phoenix_live_view,
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
 config :shipper_directory, ShipperDirectory.Mailer, adapter: Swoosh.Adapters.Local
+
+config :shipper_directory, :mail_from, {"Caribbean Shipper Directory", "noreply@example.com"}
+config :shipper_directory, :phone_sender, ShipperDirectory.Claims.PhoneSender.Log
 
 # Configure esbuild (the version is required)
 config :esbuild,

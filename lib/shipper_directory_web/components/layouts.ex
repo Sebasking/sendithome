@@ -32,6 +32,7 @@ defmodule ShipperDirectoryWeb.Layouts do
     doc: "the current [scope](https://phoenix.hexdocs.pm/scopes.html)"
 
   attr :admin, :boolean, default: false, doc: "admin pages get a wider layout and admin nav"
+  attr :current_user, :map, default: nil, doc: "the signed-in listing owner, if any"
 
   slot :inner_block, required: true
 
@@ -46,11 +47,19 @@ defmodule ShipperDirectoryWeb.Layouts do
           <span class="hidden sm:inline">Caribbean Shipper Directory</span>
         </.link>
         <div class="ml-auto flex items-center gap-1 text-sm">
-          <%= if @admin do %>
-            <.link navigate={~p"/admin"} class="btn btn-ghost btn-sm">Admin</.link>
-          <% else %>
-            <.link navigate={~p"/"} class="btn btn-ghost btn-sm">Find a shipper</.link>
-            <.link navigate={~p"/ship-barrel"} class="btn btn-ghost btn-sm">Routes</.link>
+          <%= cond do %>
+            <% @admin -> %>
+              <.link navigate={~p"/admin"} class="btn btn-ghost btn-sm">Companies</.link>
+              <.link navigate={~p"/admin/prospects"} class="btn btn-ghost btn-sm">Outreach</.link>
+            <% @current_user -> %>
+              <.link navigate={~p"/"} class="btn btn-ghost btn-sm hidden sm:inline-flex">
+                Find a shipper
+              </.link>
+              <.link navigate={~p"/my/listings"} class="btn btn-ghost btn-sm">My listings</.link>
+              <.link href={~p"/sign-out"} class="btn btn-ghost btn-sm">Sign out</.link>
+            <% true -> %>
+              <.link navigate={~p"/"} class="btn btn-ghost btn-sm">Find a shipper</.link>
+              <.link navigate={~p"/ship-barrel"} class="btn btn-ghost btn-sm">Routes</.link>
           <% end %>
           <div class="hidden sm:block"><.theme_toggle /></div>
         </div>
@@ -67,6 +76,7 @@ defmodule ShipperDirectoryWeb.Layouts do
       <div class="mx-auto max-w-6xl px-4 sm:px-6 flex flex-wrap gap-x-6 gap-y-2">
         <span>Only shippers with a verified, working website are listed.</span>
         <.link navigate={~p"/ship-barrel"} class="link">All routes</.link>
+        <.link :if={!@current_user} navigate={~p"/sign-in"} class="link">Shipper sign in</.link>
       </div>
     </footer>
 

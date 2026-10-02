@@ -16,6 +16,13 @@ defmodule ShipperDirectory.Directory.OutreachEvent do
     create :create do
       primary? true
       accept [:company_id, :channel, :outcome, :notes, :next_action_at]
+      change ShipperDirectory.Directory.Changes.ApplyOutreachOutcome
+    end
+
+    read :for_company do
+      argument :company_id, :uuid, allow_nil?: false
+      filter expr(company_id == ^arg(:company_id))
+      prepare build(sort: [inserted_at: :desc])
     end
   end
 
@@ -26,7 +33,11 @@ defmodule ShipperDirectory.Directory.OutreachEvent do
       allow_nil?: false,
       public?: true
 
-    attribute :outcome, :string, public?: true
+    attribute :outcome, ShipperDirectory.Directory.Types.OutreachOutcome,
+      allow_nil?: false,
+      default: :other,
+      public?: true
+
     attribute :notes, :string, public?: true
     attribute :next_action_at, :utc_datetime, public?: true
     timestamps()

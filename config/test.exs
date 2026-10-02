@@ -1,4 +1,6 @@
 import Config
+config :shipper_directory, token_signing_secret: "ybbtK7aXlnLzUCiPvRGAQkvPHnlJwALj"
+config :bcrypt_elixir, log_rounds: 1
 config :shipper_directory, Oban, testing: :manual
 
 # Presence checks hit Req.Test stubs instead of the network.

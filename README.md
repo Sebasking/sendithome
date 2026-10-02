@@ -43,6 +43,13 @@ mix precommit                             # compile, format, credo --strict, tes
 - `GOOGLE_PLACES_API_KEY`: Places API (New). The field mask includes
   `websiteUri`/`nationalPhoneNumber`, which bill at the Text Search Enterprise SKU.
 - `ADMIN_USERNAME` / `ADMIN_PASSWORD`: prod only.
+- `TOKEN_SIGNING_SECRET`: prod only, signs owner sign-in tokens.
+- `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM_NUMBER`: prod
+  phone codes (dev/test log them instead; see `Claims.PhoneSender.Log`).
+- `MAIL_FROM`: sender address for claim codes, sign-in links, and the digest.
+  Prod also needs a Swoosh adapter configured in `config/runtime.exs`
+  (e.g. Postmark or Resend). Dev mail shows at `/dev/mailbox`.
+- `ADMIN_EMAIL`: receives the daily follow-up digest.
 
 ## Discovery (P1)
 
@@ -100,6 +107,39 @@ destinations it maps to.
 Canonical and sitemap URLs come from the endpoint's `url` config, so set
 `PHX_HOST` in production.
 
+## Claims and owners (P3)
+
+`/shippers/:slug/claim` (`ClaimLive`, `ShipperDirectory.Claims`): the owner of
+a published, unclaimed listing proves control with a 6-digit code sent to
+- an email **at the website's domain** (webmail like Gmail is refused), or
+- the **listed phone**, by voice call (works for landlines) or SMS.
+
+Codes are stored only as bcrypt hashes. They expire after 15 minutes, 5
+wrong guesses lock the claim, and a listing allows 3 claims per hour. On
+success the claimant's email becomes a `User` who owns the company, and a
+magic sign-in link (AshAuthentication) goes to that email. Owners edit at
+`/my/listings/:slug`. They can't change the business name or internal
+notes, and a changed website is re-verified at once (a dead one hides the
+listing). Admins see the owner and claim attempts on the company edit page
+and can remove an owner.
+
+## Outreach CRM (P3)
+
+`/admin/prospects` (`ProspectsLive`): prospects filtered by metro, sorted by
+fit (`Crm.Fit`, with reasons) or follow-up date, with one-click call
+outcomes (no answer +2 days, left message +3, interested +2, not
+interested) and a panel for custom events and history. Logging
+(`Changes.ApplyOutreachOutcome`) moves status (prospect → contacted,
+not interested → declined, customer, do-not-contact) and enforces:
+- the **suppression list**: nothing can be logged for `do_not_contact`, and
+  suppressed companies never appear in the CRM or the CSV export
+- **TCPA**: SMS/WhatsApp can be logged only after an `opted_in_messaging`
+  outcome records consent
+
+`FollowUpDigestWorker` emails `ADMIN_EMAIL` the due follow-ups daily at 12:00 UTC.
+The app doesn't send cold outreach itself. When it does (CAN-SPAM), add a
+physical address and an unsubscribe link.
+
 ## Domain: `ShipperDirectory.Directory`
 
 - **Company**: `presence_status` (from the checker; `nil` = unchecked) and
@@ -110,6 +150,9 @@ Canonical and sitemap URLs come from the endpoint's `url` config, so set
 - **PresenceCheck**: append-only log of each check.
 - **OutreachEvent**: CRM touchpoints (resource only, no UI yet).
 - **DiscoveryRun**: one FMC import (params, counts, error).
+- **Claim**: one claim attempt (method, destination, code hash, attempts, status).
+
+`ShipperDirectory.Accounts`: `User` (listing owners, magic link only) and `Token`.
 
 ### Presence checker (`Directory.Presence`)
 
@@ -145,5 +188,5 @@ Manhattan 51, Staten Island 17, Bronx 16, minus the seed matches). 4 new ones we
 
 ## Not built yet
 
-Google keyword-grid discovery (dropped with the ToS decision), Yelp, claim
-flow (P3), outreach CRM UI (P3), leads and paid placement (P4).
+Google keyword-grid discovery (dropped with the ToS decision), Yelp, leads
+and paid placement (P4).

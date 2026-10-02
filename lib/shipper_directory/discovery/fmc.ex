@@ -234,7 +234,8 @@ defmodule ShipperDirectory.Discovery.Fmc do
       bare in ~w(inc. co. corp. ltd. ltd co inc corp) ->
         String.capitalize(word)
 
-      String.length(bare) <= 3 or String.contains?(bare, [".", "&"]) ->
+      String.length(String.replace(bare, ~r/[^a-z0-9]/, "")) <= 3 or
+          String.contains?(bare, [".", "&"]) ->
         word
 
       true ->

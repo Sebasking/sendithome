@@ -54,7 +54,9 @@ config :shipper_directory, ShipperDirectoryWeb.Endpoint,
 # different ports.
 
 # Enable dev routes for dashboard and mailbox
-config :shipper_directory, dev_routes: true
+config :shipper_directory,
+  dev_routes: true,
+  token_signing_secret: "ADTBCGtvAiGMjEAzityE+RJEc6qbgCft"
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :default_formatter, format: "[$level] $message\n"

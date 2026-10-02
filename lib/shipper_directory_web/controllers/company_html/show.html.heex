@@ -1,4 +1,4 @@
-<Layouts.app flash={@flash}>
+<Layouts.app flash={@flash} current_user={assigns[:current_user]}>
   <nav class="text-sm opacity-70">
     <.link navigate={~p"/"} class="hover:underline">Shippers</.link>
     <span class="mx-1">/</span> {@company.name}
@@ -10,6 +10,13 @@
         <div class="flex flex-wrap items-center gap-3">
           <h1 class="text-3xl font-bold tracking-tight">{@company.name}</h1>
           <.fmc_badge company={@company} />
+          <span
+            :if={@company.owner_id}
+            class="rounded-md bg-success/15 px-2 py-0.5 text-xs font-medium text-success"
+            title="The owner verified this listing"
+          >
+            Verified owner
+          </span>
         </div>
         <p :if={location(@company)} class="opacity-70">
           <.icon name="hero-map-pin-micro" class="size-4 -mt-0.5" /> {location(@company)}
@@ -91,4 +98,19 @@
       </dl>
     </aside>
   </div>
+
+  <aside
+    :if={ShipperDirectory.Claims.claimable?(@company)}
+    class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed border-base-300 p-5"
+  >
+    <div>
+      <p class="font-medium">Is this your business?</p>
+      <p class="text-sm opacity-70">
+        Claim it for free to update your services, destinations, and sailing schedule.
+      </p>
+    </div>
+    <.link navigate={~p"/shippers/#{@company.slug}/claim"} class="btn btn-sm">
+      Claim this listing
+    </.link>
+  </aside>
 </Layouts.app>
