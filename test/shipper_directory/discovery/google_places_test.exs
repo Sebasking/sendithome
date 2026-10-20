@@ -46,10 +46,17 @@ defmodule ShipperDirectory.Discovery.GooglePlacesTest do
 
   test "a listed website goes to review for a person to enter (never stores Google's URL)" do
     stub_places([place(%{"websiteUri" => "https://barrelit.example"})])
-    {:ok, c} = GooglePlaces.enrich(company())
+    {:ok, c} = GooglePlaces.enrich(company(%{status: :prospect, phone: "(718) 555-0199"}))
 
-    assert %{google_has_website: true, presence_status: :needs_review, website_url: nil} = c
+    assert %{
+             google_has_website: true,
+             presence_status: :needs_review,
+             status: :discovered,
+             website_url: nil
+           } = c
+
     assert c.review_reason =~ "lists a website"
+    refute Enum.any?(Directory.prospects!(), &(&1.id == c.id))
   end
 
   test "matches by phone when the name differs" do

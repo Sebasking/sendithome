@@ -95,8 +95,23 @@ defmodule ShipperDirectory.Discovery.GooglePlaces do
   end
 
   # A closed business leaves the directory and the prospect list until a
-  # person reviews it, website or not. CRM statuses (contacted, ...) stay.
-  defp transition(company, :closed, reason) do
+  # person reviews it, website or not.
+  defp transition(company, :closed, reason), do: hold_for_review(company, reason)
+
+  # A company that already has a website is the presence checker's
+  # business, so only the Google fields change.
+  defp transition(%Company{website_url: url} = company, _verdict, _reason) when is_binary(url) do
+    Map.take(company, [:presence_status, :status, :review_reason])
+  end
+
+  # Google knows a website we don't have yet: not a lead, just waiting for a
+  # person to enter the URL so the presence checker can verify it.
+  defp transition(company, :website_listed, reason), do: hold_for_review(company, reason)
+
+  defp transition(company, verdict, reason), do: Presence.transition(company, verdict, reason)
+
+  # Out of the directory and outreach, into review. CRM statuses (contacted, ...) stay.
+  defp hold_for_review(company, reason) do
     %{
       presence_status: :needs_review,
       status:
@@ -108,14 +123,6 @@ defmodule ShipperDirectory.Discovery.GooglePlaces do
     }
   end
 
-  # A company that already has a website is the presence checker's
-  # business, so only the Google fields change.
-  defp transition(%Company{website_url: url} = company, _verdict, _reason) when is_binary(url) do
-    Map.take(company, [:presence_status, :status, :review_reason])
-  end
-
-  defp transition(company, verdict, reason), do: Presence.transition(company, verdict, reason)
-
   defp verdict(company, place, has_website) do
     socials? = Enum.any?([company.facebook_url, company.instagram_url, company.yelp_url])
 
@@ -124,7 +131,7 @@ defmodule ShipperDirectory.Discovery.GooglePlaces do
         {:closed, "Google Maps says permanently closed"}
 
       has_website ->
-        {:needs_review, "Google Maps lists a website. Open it and enter the URL"}
+        {:website_listed, "Google Maps lists a website. Open it and enter the URL"}
 
       socials? ->
         {:social_only, "No website on Google Maps"}
