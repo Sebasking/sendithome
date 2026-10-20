@@ -164,4 +164,58 @@ defmodule ShipperDirectory.Discovery.FmcTest do
     assert %{fmc_license_no: "022540", address: "1476 East 222 Street"} =
              Directory.get_company!(seed.id)
   end
+
+  describe "import_scored!/2" do
+    defp scored(row, tier, kw_dest \\ ""),
+      do: Map.merge(row, %{"tier" => tier, "kw_dest" => kw_dest})
+
+    test "keeps US rows at tier B or better, in any metro, skipping triage" do
+      foreign =
+        row(%{
+          "Organization Number" => "040001",
+          "Name" => "PORT OF SPAIN CARGO LTD.",
+          "City" => "PORT OF SPAIN",
+          "Nation" => "TRINIDAD AND TOBAGO",
+          "License Number" => ""
+        })
+
+      records = [
+        scored(miami_forwarder(), "A_strong", "ANTIGUA;ST. KITTS;CAICOS"),
+        scored(dennis(), "B_likely_area"),
+        scored(standard_caribbean(), "C_weak"),
+        scored(foreign, "A_strong")
+      ]
+
+      assert %{"selected" => 2, "created" => 2} = Fmc.import_scored!(records)
+
+      assert %{
+               needs_triage: false,
+               status: :discovered,
+               origin_metros: ["Miami"],
+               destinations: ["Antigua & Barbuda", "St. Kitts & Nevis", "Caicos"]
+             } = Directory.get_company_by_slug!("sunshine-cargo-llc")
+
+      assert %{needs_triage: false} = Directory.get_company_by_slug!("dennis-shipping-co-inc")
+      assert {:error, _} = Directory.get_company_by_slug("standard-caribbean-shipping-inc")
+      assert {:error, _} = Directory.get_company_by_slug("port-of-spain-cargo-ltd")
+    end
+
+    test "--min-tier A keeps only A, and a rerun creates nothing" do
+      records = [scored(miami_forwarder(), "A_strong"), scored(dennis(), "B_likely_area")]
+
+      assert %{"selected" => 1, "created" => 1} = Fmc.import_scored!(records, min_tier: "a")
+      assert %{"created" => 0, "updated" => 1} = Fmc.import_scored!(records, min_tier: "A")
+    end
+
+    test "updates a company the regular FMC import already made" do
+      Fmc.import!([dennis()], metros: ["brooklyn"])
+
+      assert %{"created" => 0, "updated" => 1} =
+               Fmc.import_scored!([scored(dennis(), "B_likely_area")])
+    end
+
+    test "rejects an unknown tier" do
+      assert_raise ArgumentError, fn -> Fmc.import_scored!([], min_tier: "E") end
+    end
+  end
 end

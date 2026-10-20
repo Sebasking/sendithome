@@ -20,11 +20,12 @@ defmodule ShipperDirectory.Discovery.Fmc do
   """
 
   alias ShipperDirectory.Directory
-  alias ShipperDirectory.Directory.{Ingest, Normalize}
+  alias ShipperDirectory.Directory.{Destinations, Ingest, Normalize}
   alias ShipperDirectory.Discovery.Metros
 
   @source "fmc"
   @list_url "https://www2.fmc.gov/oti/NVOCC.aspx"
+  @tiers ~w(A B C D)
 
   @caribbean_regex ~r/\b(caribb\w*|carib\w*|jamaica\w*|trans-?jam|guyan\w*|trinidad|tobago|t\s?&\s?t|barbad\w*|bajan|st\.? lucia|saint lucia|grenad\w*|haiti\w*|dominica\w*|antigua\w*|st\.? vincent|vincy|st\.? kitts|nevis|bahama\w*|surinam\w*|belize\w*|islands?|barrels?|west indi\w*|antilles|montserrat|anguilla|cayman|virgin islands)\b/i
 
@@ -134,6 +135,71 @@ defmodule ShipperDirectory.Discovery.Fmc do
         Enum.count(discovered, fn {r, c} -> r == :created and not c.needs_triage end),
       "metros" => metros
     }
+  end
+
+  @doc """
+  Imports a scored copy of the list: the OTI columns plus `tier` ("A_strong",
+  "B_likely_area", "C_weak", "D_none") and `kw_dest`. Every US licensee at
+  `:min_tier` (default "B") or better becomes a company, in any metro. The
+  scoring already judged them Caribbean shippers, so they skip triage.
+  Returns stats.
+  """
+  def import_scored!(records, opts \\ []) do
+    min_tier = opts |> Keyword.get(:min_tier, "B") |> String.upcase()
+
+    unless min_tier in @tiers,
+      do: raise(ArgumentError, "min_tier must be one of #{Enum.join(@tiers, ", ")}")
+
+    selected =
+      Enum.filter(records, fn row ->
+        row["Nation"] == "UNITED STATES" and
+          tier(row) in Enum.take_while(@tiers, &(&1 <= min_tier))
+      end)
+
+    linked = cross_reference!(selected)
+
+    discovered =
+      Enum.map(selected, fn row ->
+        metro = Metros.for_address(row["State"], row["Zip"])
+
+        row
+        |> fmc_attrs()
+        |> Map.merge(%{
+          origin_metros: if(metro, do: [metro.name], else: []),
+          destinations: scored_destinations(row["kw_dest"]),
+          status: :discovered,
+          needs_triage: false
+        })
+        |> Ingest.ingest!(@source, row["Organization Number"], row)
+      end)
+
+    %{
+      "selected" => length(selected),
+      "linked" => linked,
+      "created" => Enum.count(discovered, &match?({:created, _}, &1)),
+      "updated" => Enum.count(discovered, &match?({:updated, _}, &1)),
+      "min_tier" => min_tier
+    }
+  end
+
+  defp tier(row),
+    do: row |> Map.get("tier", "") |> String.first() |> to_string() |> String.upcase()
+
+  # "ANTIGUA;ST. KITTS;CAICOS" -> ["Antigua & Barbuda", "St. Kitts & Nevis", "Caicos"]
+  defp scored_destinations(nil), do: []
+
+  defp scored_destinations(kw_dest) do
+    kw_dest
+    |> String.split(";", trim: true)
+    |> Enum.map(&String.trim/1)
+    |> Enum.reject(&(&1 == ""))
+    |> Enum.map(fn value ->
+      case Destinations.slugs_for([value]) do
+        [slug] -> Destinations.name(slug)
+        [] -> value |> String.split() |> Enum.map_join(" ", &String.capitalize/1)
+      end
+    end)
+    |> Enum.uniq()
   end
 
   @doc "Adds license numbers to existing companies that match a licensee. Returns the count."
