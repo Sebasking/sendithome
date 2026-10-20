@@ -35,3 +35,6 @@ shipper_directory-*.tar
 npm-debug.log
 /assets/node_modules/
 
+
+# macOS Finder metadata
+.DS_Store
