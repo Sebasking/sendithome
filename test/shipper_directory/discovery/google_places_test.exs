@@ -73,10 +73,31 @@ defmodule ShipperDirectory.Discovery.GooglePlacesTest do
     assert c.google_checked_at
   end
 
-  test "permanently closed goes to review" do
+  test "permanently closed leaves the prospect list and goes to review" do
     stub_places([place(%{"businessStatus" => "CLOSED_PERMANENTLY"})])
-    {:ok, c} = GooglePlaces.enrich(company())
+    {:ok, c} = GooglePlaces.enrich(company(%{status: :prospect, phone: "(718) 555-0199"}))
+
+    assert %{presence_status: :needs_review, status: :discovered} = c
     assert c.review_reason =~ "permanently closed"
+    refute Enum.any?(Directory.prospects!(), &(&1.id == c.id))
+  end
+
+  test "permanently closed unpublishes a listing even with a website" do
+    stub_places([place(%{"businessStatus" => "CLOSED_PERMANENTLY"})])
+
+    c =
+      company(%{
+        website_url: "https://barrelit.example",
+        presence_status: :listed,
+        status: :published
+      })
+
+    assert {:ok, %{status: :discovered, presence_status: :needs_review}} = GooglePlaces.enrich(c)
+  end
+
+  test "permanently closed leaves CRM statuses alone" do
+    stub_places([place(%{"businessStatus" => "CLOSED_PERMANENTLY"})])
+    assert {:ok, %{status: :contacted}} = GooglePlaces.enrich(company(%{status: :contacted}))
   end
 
   test "companies that already have a website keep their presence status" do

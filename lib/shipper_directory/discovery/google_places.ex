@@ -94,6 +94,20 @@ defmodule ShipperDirectory.Discovery.GooglePlaces do
     |> then(&Directory.record_google!(company, &1))
   end
 
+  # A closed business leaves the directory and the prospect list until a
+  # person reviews it, website or not. CRM statuses (contacted, ...) stay.
+  defp transition(company, :closed, reason) do
+    %{
+      presence_status: :needs_review,
+      status:
+        if(company.status in [:published, :verified, :prospect],
+          do: :discovered,
+          else: company.status
+        ),
+      review_reason: reason
+    }
+  end
+
   # A company that already has a website is the presence checker's
   # business, so only the Google fields change.
   defp transition(%Company{website_url: url} = company, _verdict, _reason) when is_binary(url) do
@@ -107,7 +121,7 @@ defmodule ShipperDirectory.Discovery.GooglePlaces do
 
     cond do
       place["businessStatus"] == "CLOSED_PERMANENTLY" ->
-        {:needs_review, "Google Maps says permanently closed"}
+        {:closed, "Google Maps says permanently closed"}
 
       has_website ->
         {:needs_review, "Google Maps lists a website. Open it and enter the URL"}
