@@ -1,4 +1,4 @@
-# Caribbean Shipper Directory
+# SendItHome
 
 A directory of Caribbean barrel and freight shippers operating out of US metros.
 Companies with a working website of their own are published. Those without one

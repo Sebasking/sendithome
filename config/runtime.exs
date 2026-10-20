@@ -82,7 +82,7 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
-  host = System.get_env("PHX_HOST") || "example.com"
+  host = System.get_env("PHX_HOST") || "sendithome.net"
 
   config :shipper_directory, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
@@ -105,7 +105,7 @@ if config_env() == :prod do
     from_number: System.get_env("TWILIO_FROM_NUMBER")
 
   if from = System.get_env("MAIL_FROM") do
-    config :shipper_directory, :mail_from, {"Caribbean Shipper Directory", from}
+    config :shipper_directory, :mail_from, {"SendItHome", from}
   end
 
   config :shipper_directory, :admin_email, System.get_env("ADMIN_EMAIL")

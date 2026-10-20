@@ -20,25 +20,25 @@
 }
 
 /* daisyUI theme plugin.
-  We ship with two themes, a light one inspired on Phoenix colors and a dark one inspired
-  on Elixir colors. Build your own at: https://daisyui.com/theme-generator/ */
+  SendItHome brand themes: teal #0E6B6B, orange #E8743B, ink #10292B.
+  The dark theme's base-100 is the ink color so the reversed lockup sits flush on it. */
 @plugin "daisyui/packages/bundle/daisyui-theme" {
   name: "dark";
   default: false;
   prefersdark: true;
   color-scheme: "dark";
-  --color-base-100: oklch(30.33% 0.016 252.42);
-  --color-base-200: oklch(25.26% 0.014 253.1);
-  --color-base-300: oklch(20.15% 0.012 254.09);
-  --color-base-content: oklch(97.807% 0.029 256.847);
-  --color-primary: oklch(58% 0.233 277.117);
-  --color-primary-content: oklch(96% 0.018 272.314);
-  --color-secondary: oklch(58% 0.233 277.117);
-  --color-secondary-content: oklch(96% 0.018 272.314);
-  --color-accent: oklch(60% 0.25 292.717);
-  --color-accent-content: oklch(96% 0.016 293.756);
-  --color-neutral: oklch(37% 0.044 257.287);
-  --color-neutral-content: oklch(98% 0.003 247.858);
+  --color-base-100: oklch(26.2% 0.0311 202.34);
+  --color-base-200: oklch(23.45% 0.029 202.98);
+  --color-base-300: oklch(20.28% 0.0253 204.43);
+  --color-base-content: oklch(95.18% 0.0086 188.11);
+  --color-primary: oklch(69.77% 0.1029 190.18);
+  --color-primary-content: oklch(26.2% 0.0311 202.34);
+  --color-secondary: oklch(73.31% 0.1419 47.01);
+  --color-secondary-content: oklch(26.2% 0.0311 202.34);
+  --color-accent: oklch(73.31% 0.1419 47.01);
+  --color-accent-content: oklch(26.2% 0.0311 202.34);
+  --color-neutral: oklch(32.56% 0.0369 200.99);
+  --color-neutral-content: oklch(95.18% 0.0086 188.11);
   --color-info: oklch(58% 0.158 241.966);
   --color-info-content: oklch(97% 0.013 236.62);
   --color-success: oklch(60% 0.118 184.704);
@@ -62,18 +62,18 @@
   default: true;
   prefersdark: false;
   color-scheme: "light";
-  --color-base-100: oklch(98% 0 0);
-  --color-base-200: oklch(96% 0.001 286.375);
-  --color-base-300: oklch(92% 0.004 286.32);
-  --color-base-content: oklch(21% 0.006 285.885);
-  --color-primary: oklch(70% 0.213 47.604);
-  --color-primary-content: oklch(98% 0.016 73.684);
-  --color-secondary: oklch(55% 0.027 264.364);
-  --color-secondary-content: oklch(98% 0.002 247.839);
-  --color-accent: oklch(0% 0 0);
-  --color-accent-content: oklch(100% 0 0);
-  --color-neutral: oklch(44% 0.017 285.786);
-  --color-neutral-content: oklch(98% 0 0);
+  --color-base-100: oklch(99.03% 0.0011 197.14);
+  --color-base-200: oklch(96.68% 0.0044 179.73);
+  --color-base-300: oklch(92.36% 0.01 181.39);
+  --color-base-content: oklch(26.2% 0.0311 202.34);
+  --color-primary: oklch(47.95% 0.0784 194.86);
+  --color-primary-content: oklch(100% 0 0);
+  --color-secondary: oklch(68.46% 0.16 44.72);
+  --color-secondary-content: oklch(26.2% 0.0311 202.34);
+  --color-accent: oklch(68.46% 0.16 44.72);
+  --color-accent-content: oklch(26.2% 0.0311 202.34);
+  --color-neutral: oklch(26.2% 0.0311 202.34);
+  --color-neutral-content: oklch(100% 0 0);
   --color-info: oklch(62% 0.214 259.815);
   --color-info-content: oklch(97% 0.014 254.604);
   --color-success: oklch(70% 0.14 182.503);

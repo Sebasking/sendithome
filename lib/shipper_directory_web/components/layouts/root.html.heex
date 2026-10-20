@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
     <.live_title
-      default="Caribbean Shipper Directory"
-      suffix=" · Caribbean Shipper Directory"
+      default="SendItHome · Find your Caribbean shipper"
+      suffix=" · SendItHome"
       phx-no-format
     >{assigns[:page_title]}</.live_title>
     <meta :if={assigns[:meta_description]} name="description" content={@meta_description} />
@@ -16,6 +16,11 @@
     <meta :if={assigns[:meta_description]} property="og:description" content={@meta_description} />
     <meta :if={assigns[:canonical_url]} property="og:url" content={@canonical_url} />
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="SendItHome" />
+    <meta name="theme-color" content="#0E6B6B" />
+    <link rel="icon" href={~p"/favicon.ico"} sizes="32x32" />
+    <link rel="icon" href={~p"/images/brand/favicon.svg"} type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={~p"/images/brand/apple-touch-icon.png"} />
     <script :if={assigns[:json_ld]} type="application/ld+json">
       <%= raw(Jason.encode!(@json_ld, escape: :html_safe)) %>
     </script>

@@ -49,7 +49,7 @@ defmodule ShipperDirectory.ClaimsTest do
 
     assert_email_sent(
       to: "info@fcsshipping.com",
-      subject: "Your sign-in link for Caribbean Shipper Directory"
+      subject: "Your sign-in link for SendItHome"
     )
 
     assert %{status: :verified, user_id: ^owner_id} = Directory.get_claim!(claim.id)

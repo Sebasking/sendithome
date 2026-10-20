@@ -13,7 +13,7 @@ defmodule ShipperDirectory.Leads.Emails do
     |> to(delivery.sent_to)
     |> subject("New quote request: #{Leads.route_label(lead)}")
     |> text_body("""
-    #{company.name} has a new quote request from Caribbean Shipper Directory.
+    #{company.name} has a new quote request from SendItHome.
 
     From:     #{lead.name}
     Phone:    #{lead.phone || "-"}

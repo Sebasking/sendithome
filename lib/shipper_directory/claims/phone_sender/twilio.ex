@@ -11,8 +11,7 @@ defmodule ShipperDirectory.Claims.PhoneSender.Twilio do
     post("Messages.json",
       To: to,
       From: config(:from_number),
-      Body:
-        "Your Caribbean Shipper Directory verification code is #{code}. It expires in 15 minutes."
+      Body: "Your SendItHome verification code is #{code}. It expires in 15 minutes."
     )
   end
 
@@ -20,7 +19,7 @@ defmodule ShipperDirectory.Claims.PhoneSender.Twilio do
     spoken = code |> String.graphemes() |> Enum.join(", ")
 
     twiml =
-      "<Response><Say>Your Caribbean Shipper Directory verification code is: #{spoken}.</Say>" <>
+      "<Response><Say>Your Send It Home verification code is: #{spoken}.</Say>" <>
         ~s(<Pause length="1"/><Say>Again, your code is: #{spoken}.</Say></Response>)
 
     post("Calls.json", To: to, From: config(:from_number), Twiml: twiml)

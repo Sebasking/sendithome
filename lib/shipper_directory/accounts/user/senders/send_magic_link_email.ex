@@ -24,7 +24,7 @@ defmodule ShipperDirectory.Accounts.User.Senders.SendMagicLinkEmail do
     new()
     |> from(Emails.from())
     |> to(to_string(email))
-    |> subject("Your sign-in link for Caribbean Shipper Directory")
+    |> subject("Your sign-in link for SendItHome")
     |> html_body(body(token: token, email: email))
     |> Mailer.deliver!()
   end

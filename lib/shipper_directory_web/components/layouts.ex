@@ -40,11 +40,29 @@ defmodule ShipperDirectoryWeb.Layouts do
     ~H"""
     <header class="border-b border-base-300 bg-base-100/80 backdrop-blur sticky top-0 z-10">
       <nav class="mx-auto max-w-6xl flex items-center gap-3 px-4 py-3 sm:gap-6 sm:px-6">
-        <.link navigate={~p"/"} class="flex items-center gap-2 font-semibold tracking-tight">
-          <span class="grid size-8 place-items-center rounded-lg bg-primary text-primary-content">
-            <.icon name="hero-cube" class="size-5" />
+        <.link
+          navigate={~p"/"}
+          id="site-logo"
+          class="flex shrink-0 items-center transition-opacity hover:opacity-80"
+          aria-label="SendItHome home"
+        >
+          <%!-- Mark alone on phones, full lockup from sm up; reversed artwork in dark mode --%>
+          <span class="contents dark:hidden">
+            <img src={~p"/images/brand/mark.svg"} alt="" class="h-8 w-auto sm:hidden" />
+            <img
+              src={~p"/images/brand/lockup.svg"}
+              alt="SendItHome"
+              class="hidden h-8 w-auto sm:block"
+            />
           </span>
-          <span class="hidden sm:inline">Caribbean Shipper Directory</span>
+          <span class="hidden dark:contents">
+            <img src={~p"/images/brand/mark-reversed.svg"} alt="" class="h-8 w-auto sm:hidden" />
+            <img
+              src={~p"/images/brand/lockup-reversed.svg"}
+              alt="SendItHome"
+              class="hidden h-8 w-auto sm:block"
+            />
+          </span>
         </.link>
         <div class="ml-auto flex items-center gap-1 text-sm">
           <%= cond do %>
@@ -76,7 +94,12 @@ defmodule ShipperDirectoryWeb.Layouts do
     </main>
 
     <footer :if={!@admin} class="border-t border-base-300 py-8 text-sm opacity-70">
-      <div class="mx-auto max-w-6xl px-4 sm:px-6 flex flex-wrap gap-x-6 gap-y-2">
+      <div class="mx-auto max-w-6xl px-4 sm:px-6 flex flex-wrap items-center gap-x-6 gap-y-2">
+        <span class="flex items-center gap-2 font-semibold">
+          <img src={~p"/images/brand/mark.svg"} alt="" class="h-5 w-auto dark:hidden" />
+          <img src={~p"/images/brand/mark-reversed.svg"} alt="" class="hidden h-5 w-auto dark:block" />
+          SendItHome
+        </span>
         <span>Only shippers with a verified, working website are listed.</span>
         <.link navigate={~p"/ship-barrel"} class="link">All routes</.link>
         <.link :if={!@current_user} navigate={~p"/sign-in"} class="link">Shipper sign in</.link>

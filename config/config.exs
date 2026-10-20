@@ -102,7 +102,7 @@ config :phoenix_live_view,
 # at the `config/runtime.exs`.
 config :shipper_directory, ShipperDirectory.Mailer, adapter: Swoosh.Adapters.Local
 
-config :shipper_directory, :mail_from, {"Caribbean Shipper Directory", "noreply@example.com"}
+config :shipper_directory, :mail_from, {"SendItHome", "noreply@example.com"}
 config :shipper_directory, :phone_sender, ShipperDirectory.Claims.PhoneSender.Log
 
 # Pay-per-lead price, fixed on each delivery when sent. 0 = free beta.

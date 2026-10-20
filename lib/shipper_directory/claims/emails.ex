@@ -7,7 +7,7 @@ defmodule ShipperDirectory.Claims.Emails do
       Application.get_env(
         :shipper_directory,
         :mail_from,
-        {"Caribbean Shipper Directory", "noreply@example.com"}
+        {"SendItHome", "noreply@example.com"}
       )
 
   def claim_code(to, code, company) do
@@ -16,7 +16,7 @@ defmodule ShipperDirectory.Claims.Emails do
     |> to(to)
     |> subject("#{code} is your code to claim #{company.name}")
     |> text_body("""
-    Someone (hopefully you) asked to claim the #{company.name} listing on Caribbean Shipper Directory.
+    Someone (hopefully you) asked to claim the #{company.name} listing on SendItHome.
 
     Your verification code is: #{code}
 
