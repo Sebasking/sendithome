@@ -30,14 +30,15 @@ defmodule ShipperDirectory.Discovery.GooglePlacesTest do
 
   test "no website on Google makes a prospect and stores only the place ID and flag" do
     stub_places([place(%{"nationalPhoneNumber" => "(718) 555-0100"})])
-    {:ok, c} = GooglePlaces.enrich(company())
+    # Matched by name; Google's phone is never copied over ours.
+    {:ok, c} = GooglePlaces.enrich(company(%{phone: "(718) 555-0199"}))
 
     assert %{
              google_place_id: "ChIJplace",
              google_has_website: false,
              presence_status: :none,
              status: :prospect,
-             phone: nil
+             phone: "(718) 555-0199"
            } = c
 
     assert c.google_checked_at

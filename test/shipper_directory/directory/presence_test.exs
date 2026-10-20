@@ -105,8 +105,25 @@ defmodule ShipperDirectory.Directory.PresenceTest do
 
     test "demotes a published company whose site went dead" do
       stub_html("gone", 410)
-      c = company(%{website_url: "https://example.com", status: :published})
+
+      c =
+        company(%{
+          website_url: "https://example.com",
+          status: :published,
+          phone: "(718) 555-0100"
+        })
+
       assert %{presence_status: :dead_site, status: :prospect} = Presence.check(c)
+    end
+
+    test "no website becomes a prospect only with a phone or email to reach" do
+      assert %{presence_status: :none, status: :prospect} =
+               Presence.check(company(%{email: "info@islandlink.example"}))
+
+      assert %{presence_status: :none, status: :discovered, review_reason: reason} =
+               Presence.check(company(%{name: "Unreachable Cargo"}))
+
+      assert reason =~ "can't be worked as a lead"
     end
 
     test "held companies stay in review whatever the verdict" do

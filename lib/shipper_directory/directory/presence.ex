@@ -111,13 +111,30 @@ defmodule ShipperDirectory.Directory.Presence do
     }
   end
 
-  def transition(%Company{status: status}, verdict, _reason)
+  # No usable website: a lead for outreach, but only if there's a way to reach
+  # it (phone, email, a claimed owner, or the social profile that made it social_only).
+  def transition(%Company{status: status} = company, verdict, _reason)
       when verdict in [:dead_site, :social_only, :none] do
-    %{
-      presence_status: verdict,
-      status: if(status in [:discovered, :verified, :published], do: :prospect, else: status),
-      review_reason: nil
-    }
+    directory_side? = status in [:discovered, :verified, :published]
+
+    cond do
+      directory_side? and verdict != :social_only and not contactable?(company) ->
+        %{
+          presence_status: verdict,
+          status: :discovered,
+          review_reason: "No website, phone, or email, so it can't be worked as a lead"
+        }
+
+      directory_side? ->
+        %{presence_status: verdict, status: :prospect, review_reason: nil}
+
+      true ->
+        %{presence_status: verdict, status: status, review_reason: nil}
+    end
+  end
+
+  defp contactable?(company) do
+    company.owner_id != nil or Enum.any?([company.phone, company.email], &(&1 not in [nil, ""]))
   end
 
   @doc "Classifies a company's online presence. Only makes HTTP requests for an own-domain URL."
