@@ -20,6 +20,13 @@ if System.get_env("PHX_SERVER") do
   config :shipper_directory, ShipperDirectoryWeb.Endpoint, server: true
 end
 
+case System.get_env("LOGO_VARIANT") do
+  nil -> :ok
+  "a" -> config :shipper_directory, :logo_variant, :a
+  "b" -> config :shipper_directory, :logo_variant, :b
+  other -> raise "LOGO_VARIANT must be \"a\" or \"b\", got: #{inspect(other)}"
+end
+
 config :shipper_directory, ShipperDirectoryWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 

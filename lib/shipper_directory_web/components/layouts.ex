@@ -5,6 +5,8 @@ defmodule ShipperDirectoryWeb.Layouts do
   """
   use ShipperDirectoryWeb, :html
 
+  alias ShipperDirectoryWeb.Brand
+
   # Embed all files in layouts/* within this module.
   # The default root.html.heex file contains the HTML
   # skeleton of your application, namely HTML headers
@@ -48,17 +50,17 @@ defmodule ShipperDirectoryWeb.Layouts do
         >
           <%!-- Mark alone on phones, full lockup from sm up; reversed artwork in dark mode --%>
           <span class="contents dark:hidden">
-            <img src={~p"/images/brand/mark.svg"} alt="" class="h-8 w-auto sm:hidden" />
+            <img src={Brand.asset("mark.svg")} alt="" class="h-8 w-auto sm:hidden" />
             <img
-              src={~p"/images/brand/lockup.svg"}
+              src={Brand.asset("lockup.svg")}
               alt="SendItHome"
               class="hidden h-8 w-auto sm:block"
             />
           </span>
           <span class="hidden dark:contents">
-            <img src={~p"/images/brand/mark-reversed.svg"} alt="" class="h-8 w-auto sm:hidden" />
+            <img src={Brand.asset("mark-reversed.svg")} alt="" class="h-8 w-auto sm:hidden" />
             <img
-              src={~p"/images/brand/lockup-reversed.svg"}
+              src={Brand.asset("lockup-reversed.svg")}
               alt="SendItHome"
               class="hidden h-8 w-auto sm:block"
             />
@@ -96,8 +98,8 @@ defmodule ShipperDirectoryWeb.Layouts do
     <footer :if={!@admin} class="border-t border-base-300 py-8 text-sm opacity-70">
       <div class="mx-auto max-w-6xl px-4 sm:px-6 flex flex-wrap items-center gap-x-6 gap-y-2">
         <span class="flex items-center gap-2 font-semibold">
-          <img src={~p"/images/brand/mark.svg"} alt="" class="h-5 w-auto dark:hidden" />
-          <img src={~p"/images/brand/mark-reversed.svg"} alt="" class="hidden h-5 w-auto dark:block" />
+          <img src={Brand.asset("mark.svg")} alt="" class="h-5 w-auto dark:hidden" />
+          <img src={Brand.asset("mark-reversed.svg")} alt="" class="hidden h-5 w-auto dark:block" />
           SendItHome
         </span>
         <span>Only shippers with a verified, working website are listed.</span>

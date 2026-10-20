@@ -103,6 +103,10 @@ config :phoenix_live_view,
 config :shipper_directory, ShipperDirectory.Mailer, adapter: Swoosh.Adapters.Local
 
 config :shipper_directory, :mail_from, {"SendItHome", "noreply@example.com"}
+# Logo candidate shown site-wide: :a (Line barrel) or :b (Barrel pin).
+# Override at runtime with LOGO_VARIANT=a|b.
+config :shipper_directory, :logo_variant, :b
+
 config :shipper_directory, :phone_sender, ShipperDirectory.Claims.PhoneSender.Log
 
 # Pay-per-lead price, fixed on each delivery when sent. 0 = free beta.

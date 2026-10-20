@@ -73,6 +73,7 @@ defmodule ShipperDirectoryWeb.Router do
   scope "/", ShipperDirectoryWeb do
     get "/sitemap.xml", SitemapController, :index
     get "/robots.txt", SitemapController, :robots
+    get "/favicon.ico", BrandController, :favicon
   end
 
   scope "/admin", ShipperDirectoryWeb.Admin do
