@@ -54,19 +54,22 @@ defmodule ShipperDirectoryWeb.Router do
     auth_routes AuthController, ShipperDirectory.Accounts.User, path: "/auth"
 
     sign_out_route AuthController, "/sign-out",
-      overrides: [ShipperDirectoryWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+      layout: {ShipperDirectoryWeb.Layouts, :auth},
+      overrides: [ShipperDirectoryWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI]
 
     # Listing owners sign in with a magic link (no passwords).
     sign_in_route auth_routes_prefix: "/auth",
                   on_mount: [{ShipperDirectoryWeb.LiveUserAuth, :live_no_user}],
+                  layout: {ShipperDirectoryWeb.Layouts, :auth},
                   overrides: [
                     ShipperDirectoryWeb.AuthOverrides,
-                    AshAuthentication.Phoenix.Overrides.Default
+                    AshAuthentication.Phoenix.Overrides.DaisyUI
                   ]
 
     magic_sign_in_route(ShipperDirectory.Accounts.User, :magic_link,
       auth_routes_prefix: "/auth",
-      overrides: [ShipperDirectoryWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+      layout: {ShipperDirectoryWeb.Layouts, :auth},
+      overrides: [ShipperDirectoryWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI]
     )
   end
 

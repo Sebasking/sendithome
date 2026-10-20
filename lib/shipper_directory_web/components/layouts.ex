@@ -113,6 +113,66 @@ defmodule ShipperDirectoryWeb.Layouts do
   end
 
   @doc """
+  Live layout for the AshAuthentication pages (sign in, magic link, sign out):
+  a centered, branded card in place of the full site chrome.
+  """
+  def auth(assigns) do
+    assigns = assign(assigns, :auth_heading, auth_heading(assigns))
+
+    ~H"""
+    <main class="grid min-h-screen place-items-center bg-base-200 px-4 py-12">
+      <div class="w-full max-w-md">
+        <.link
+          navigate={~p"/"}
+          id="auth-logo"
+          class="mx-auto mb-8 flex w-fit transition-opacity hover:opacity-80"
+          aria-label="SendItHome home"
+        >
+          <img src={Brand.asset("lockup.svg")} alt="SendItHome" class="h-10 w-auto dark:hidden" />
+          <img
+            src={Brand.asset("lockup-reversed.svg")}
+            alt="SendItHome"
+            class="hidden h-10 w-auto dark:block"
+          />
+        </.link>
+
+        <div
+          id="auth-card"
+          class="rounded-2xl border border-base-300 bg-base-100 px-6 py-8 shadow-sm sm:px-10"
+        >
+          <div :if={@auth_heading} class="mb-6">
+            <h1 id="auth-heading" class="text-2xl font-bold tracking-tight">
+              {elem(@auth_heading, 0)}
+            </h1>
+            <p class="mt-1 text-sm text-base-content/70">{elem(@auth_heading, 1)}</p>
+          </div>
+          {@inner_content}
+        </div>
+
+        <p class="mt-6 text-center text-sm">
+          <.link navigate={~p"/"} class="link link-hover text-primary">
+            <.icon name="hero-arrow-left-mini" class="size-4" /> Back to the directory
+          </.link>
+        </p>
+      </div>
+    </main>
+
+    <.flash_group flash={@flash} />
+    """
+  end
+
+  # Sign-out renders its own heading; the magic link landing page is the one with a token.
+  defp auth_heading(%{live_action: :sign_out}), do: nil
+
+  defp auth_heading(%{token: _}),
+    do: {"Finish signing in", "Confirm below to sign in to your SendItHome account."}
+
+  defp auth_heading(_assigns),
+    do:
+      {"Shipper sign in",
+       "Enter the email on your listing and we'll send you a one-time sign-in link. No password needed."}
+
+  @doc """
   Shows the flash group with standard titles and content.
 
   ## Examples
