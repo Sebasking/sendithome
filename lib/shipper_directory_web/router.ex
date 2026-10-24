@@ -15,6 +15,15 @@ defmodule ShipperDirectoryWeb.Router do
     plug :load_from_session
   end
 
+  # The QR sticker flow sets no cookies: no CSRF token, flash or sign-in
+  # session. The session is fetched (LiveView reads it) but never written.
+  pipeline :flow do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :put_root_layout, html: {ShipperDirectoryWeb.Layouts, :flow_root}
+    plug :put_secure_browser_headers
+  end
+
   pipeline :admin do
     plug ShipperDirectoryWeb.Plugs.AdminAuth
   end
@@ -42,6 +51,21 @@ defmodule ShipperDirectoryWeb.Router do
       live "/", DirectoryLive, :index
       live "/shippers/:slug/claim", ClaimLive, :new
       live "/quote", QuoteLive, :new
+    end
+  end
+
+  # QR sticker onboarding flow. `/?utm_source=sticker` (the first print)
+  # is handled by Plugs.LegacyStickerScan in the endpoint.
+  scope "/", ShipperDirectoryWeb do
+    pipe_through :flow
+
+    get "/s/:code", ScanController, :show
+    get "/go/:slug/:channel", ContactController, :show
+
+    live_session :flow do
+      live "/start", FinderLive, :destination
+      live "/start/when", FinderLive, :timing
+      live "/shippers", FinderLive, :results
     end
   end
 

@@ -33,6 +33,13 @@ defmodule ShipperDirectoryWeb.Admin.CompanyEditLive do
     end
   end
 
+  def handle_event("toggle_verified", _params, socket) do
+    company = socket.assigns.company
+    updated = Directory.set_company_verified!(company, is_nil(company.verified_at))
+    # Keep the loaded owner; the form's values haven't changed.
+    {:noreply, assign(socket, company: %{company | verified_at: updated.verified_at})}
+  end
+
   def handle_event("remove_owner", _params, socket) do
     company = Directory.remove_owner!(socket.assigns.company)
     {:noreply, socket |> put_flash(:info, "Owner removed") |> assign_company(company)}
@@ -84,6 +91,22 @@ defmodule ShipperDirectoryWeb.Admin.CompanyEditLive do
           class="btn btn-sm"
         >
           Remove owner
+        </button>
+      </div>
+
+      <div id="verification" class="flex flex-wrap items-center gap-3 text-sm">
+        <span :if={@company.verified_at}>
+          <.icon name="hero-phone" />
+          Verified by phone on {Calendar.strftime(
+            @company.verified_at,
+            "%b %d, %Y"
+          )}. Shown in the QR flow.
+        </span>
+        <span :if={!@company.verified_at} class="opacity-70">
+          Not verified by phone, so not shown in the QR flow.
+        </span>
+        <button id="toggle-verified" phx-click="toggle_verified" class="btn btn-sm">
+          {if @company.verified_at, do: "Remove verification", else: "Mark verified"}
         </button>
       </div>
 

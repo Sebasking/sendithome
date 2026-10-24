@@ -15,7 +15,8 @@ config :shipper_directory, Oban,
     crontab: [
       {"0 6 * * *", ShipperDirectory.Workers.PresenceRecheckScheduler},
       {"0 5 * * MON", ShipperDirectory.Workers.FmcImportWorker},
-      {"0 12 * * *", ShipperDirectory.Workers.FollowUpDigestWorker}
+      {"0 12 * * *", ShipperDirectory.Workers.FollowUpDigestWorker},
+      {"30 3 * * *", ShipperDirectory.Workers.EventRetentionWorker}
     ]
   ],
   lifeline: [rescue_after: {2, :hours}],
@@ -73,7 +74,7 @@ config :spark,
 
 config :shipper_directory,
   ecto_repos: [ShipperDirectory.Repo],
-  ash_domains: [ShipperDirectory.Accounts, ShipperDirectory.Directory],
+  ash_domains: [ShipperDirectory.Accounts, ShipperDirectory.Directory, ShipperDirectory.Analytics],
   generators: [timestamp_type: :utc_datetime],
   ash_authentication: [return_error_on_invalid_magic_link_token?: true]
 
@@ -111,6 +112,23 @@ config :shipper_directory, :phone_sender, ShipperDirectory.Claims.PhoneSender.Lo
 
 # Pay-per-lead price, fixed on each delivery when sent. 0 = free beta.
 config :shipper_directory, :lead_price_cents, 0
+
+# QR sticker onboarding flow (/s/:code -> /start -> /shippers).
+config :shipper_directory, :finder,
+  # Screen 2 ("When does it need to get there?") only shows inside this
+  # window, and `when=christmas` is ignored outside it.
+  christmas_window_start: ~D[2026-10-01],
+  christmas_window_end: ~D[2026-12-20],
+  # "Many shippers stop taking barrels for Christmas delivery around ..."
+  christmas_cutoff_display_date: ~D[2026-11-21],
+  # Fewer results than this shows the "still adding shippers" panel and
+  # drops the sticker's area preference.
+  thin_results_threshold: 3,
+  suggest_shipper_url: "mailto:hello@sendithome.net?subject=Suggest%20a%20shipper"
+
+# Analytics events (scans, answers, impressions, contact clicks) older than
+# this are deleted nightly.
+config :shipper_directory, :event_retention_months, 24
 
 # Configure esbuild (the version is required)
 config :esbuild,

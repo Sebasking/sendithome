@@ -15,6 +15,8 @@ defmodule ShipperDirectory.Application do
       # Holds dev/test claim codes when phone codes are logged instead of sent.
       phone_sender_log(),
       {Phoenix.PubSub, name: ShipperDirectory.PubSub},
+      # Analytics events are written off the request path.
+      {Task.Supervisor, name: ShipperDirectory.EventLogSupervisor},
       # Start a worker by calling: ShipperDirectory.Worker.start_link(arg)
       # {ShipperDirectory.Worker, arg},
       # Start to serve requests, typically the last entry
