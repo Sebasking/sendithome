@@ -24,6 +24,8 @@ defmodule ShipperDirectory.Directory do
       define :approve_listing, action: :approve_listing
       define :reject_listing, action: :reject_listing
       define :set_company_status, action: :set_status, args: [:status]
+      define :set_company_verified, action: :set_verified, args: [:verified]
+      define :directory_search, action: :directory_search
       define :set_website, action: :set_website, args: [:website_url]
       define :record_outreach_result, action: :record_outreach_result
       define :owner_update_company, action: :owner_update
@@ -40,6 +42,25 @@ defmodule ShipperDirectory.Directory do
       define :duplicate_queue, action: :duplicate_queue
       define :companies_needing_google_lookup, action: :needs_google_lookup
       define :companies_by_name_core, action: :by_name_core, args: [:name_core]
+    end
+
+    resource ShipperDirectory.Directory.Destination do
+      define :create_destination, action: :create
+      define :active_destinations, action: :active
+
+      define :get_active_destination,
+        action: :active,
+        get_by: [:code],
+        not_found_error?: false
+    end
+
+    resource ShipperDirectory.Directory.StickerSource do
+      define :create_sticker_source, action: :create
+
+      define :get_active_sticker_source,
+        action: :active,
+        get_by: [:code],
+        not_found_error?: false
     end
 
     resource ShipperDirectory.Directory.Sighting do

@@ -15,6 +15,13 @@ defmodule ShipperDirectoryWeb.Endpoint do
     websocket: [connect_info: [session: @session_options]],
     longpoll: [connect_info: [session: @session_options]]
 
+  # The QR flow promises visitors no cookies, and the socket above won't
+  # mount a LiveView without a session cookie. Flow pages connect here
+  # instead (see the live-socket-path meta tag in flow_root.html.heex).
+  socket "/flow/live", Phoenix.LiveView.Socket,
+    websocket: [connect_info: [:user_agent]],
+    longpoll: [connect_info: [:user_agent]]
+
   # Serve at "/" the static files from "priv/static" directory.
   #
   # When code reloading is disabled (e.g., in production),
@@ -52,5 +59,6 @@ defmodule ShipperDirectoryWeb.Endpoint do
   plug Plug.MethodOverride
   plug Plug.Head
   plug Plug.Session, @session_options
+  plug ShipperDirectoryWeb.Plugs.LegacyStickerScan
   plug ShipperDirectoryWeb.Router
 end

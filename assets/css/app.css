@@ -104,3 +104,28 @@
 [data-phx-session], [data-phx-teleported-src] { display: contents }
 
 /* This file is for your main application CSS */
+
+/* QR sticker flow (/start, /shippers): brand tokens, used as bg-brand-primary,
+   text-brand-ink, etc. The accent orange is decoration only, never text. */
+@theme {
+  --color-brand-primary: #0E6B6B;
+  --color-brand-accent: #E8743B;
+  --color-brand-ink: #10292B;
+  --color-brand-muted: #4A5F61;
+  --color-brand-ground: #F5F8F7;
+  --color-brand-surface: #FFFFFF;
+  --color-brand-border: #D5DEDD;
+  --color-brand-tint: #E3EFEE;
+  --color-brand-sponsor-bg: #FDEBDD;
+  --color-brand-sponsor-ink: #5A2609;
+  --font-outfit: "Outfit", system-ui, sans-serif;
+}
+
+/* Outfit (variable, latin subset), self-hosted so visitors' browsers never call Google. */
+@font-face {
+  font-family: "Outfit";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/outfit-latin.woff2") format("woff2");
+}

@@ -33,7 +33,12 @@ defmodule ShipperDirectory.Directory.Company do
     :destinations,
     :source,
     :notes,
-    :sailing_schedule
+    :sailing_schedule,
+    :neighborhood,
+    :whatsapp_number,
+    :next_sailing_date,
+    :christmas_cutoff_date,
+    :pickup_available
   ]
 
   postgres do
@@ -93,6 +98,17 @@ defmodule ShipperDirectory.Directory.Company do
 
     update :set_status do
       accept [:status]
+    end
+
+    update :set_verified do
+      description "Admin confirms (or withdraws) a shipper by phone. Only verified shippers appear in the QR flow."
+      require_atomic? false
+      argument :verified, :boolean, allow_nil?: false
+
+      change fn changeset, _context ->
+        at = if Ash.Changeset.get_argument(changeset, :verified), do: DateTime.utc_now()
+        Ash.Changeset.force_change_attribute(changeset, :verified_at, at)
+      end
     end
 
     update :record_outreach_result do
@@ -263,6 +279,18 @@ defmodule ShipperDirectory.Directory.Company do
       prepare build(sort: [:name])
     end
 
+    read :directory_search do
+      description "QR flow results: published, phone-verified shippers. Filters are optional."
+      argument :destination_code, :string
+      argument :area_slug, :string
+      argument :when, :atom, default: :any, constraints: [one_of: [:any, :christmas]]
+      argument :on, :date, default: &Date.utc_today/0
+
+      filter expr(status == :published and not is_nil(verified_at))
+      prepare ShipperDirectory.Directory.Preparations.DirectorySearch
+      prepare build(sort: [:name])
+    end
+
     read :prospects do
       filter expr(status in [:prospect, :contacted])
       prepare build(sort: [:name])
@@ -332,6 +360,18 @@ defmodule ShipperDirectory.Directory.Company do
     attribute :destinations, {:array, :string}, allow_nil?: false, default: [], public?: true
     attribute :source, {:array, :string}, allow_nil?: false, default: [], public?: true
     attribute :sailing_schedule, :string, public?: true
+
+    # Shown on QR flow result cards.
+    attribute :neighborhood, :string, public?: true
+    attribute :whatsapp_number, :string, public?: true
+    attribute :next_sailing_date, :date, public?: true
+    # Last drop-off date for Christmas delivery. Nil means unknown, never "any time".
+    attribute :christmas_cutoff_date, :date, public?: true
+    attribute :pickup_available, :boolean, public?: true
+
+    # Set when we've confirmed the shipper by phone. Only verified shippers
+    # appear in the QR flow.
+    attribute :verified_at, :utc_datetime_usec, public?: true
 
     # Canonical slugs derived by SetSearchKeys, for search and route pages.
     attribute :metro_slugs, {:array, :string}, allow_nil?: false, default: [], public?: true

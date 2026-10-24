@@ -12,8 +12,7 @@ defmodule ShipperDirectory.Directory.Placement do
 
   require Ash.Query
 
-  alias ShipperDirectory.Directory.Destinations
-  alias ShipperDirectory.Discovery.Metros
+  alias ShipperDirectory.Directory.Types.{DestinationSlug, Metro}
 
   @max_per_slot 2
   def max_per_slot, do: @max_per_slot
@@ -57,18 +56,11 @@ defmodule ShipperDirectory.Directory.Placement do
     end
   end
 
-  validations do
-    validate one_of(:metro, Metros.slugs())
-
-    validate one_of(:destination, Destinations.slugs()),
-      where: present(:destination)
-  end
-
   attributes do
     uuid_primary_key :id
-    attribute :metro, :string, allow_nil?: false, public?: true
+    attribute :metro, Metro, allow_nil?: false, public?: true
     # nil = every route from the metro
-    attribute :destination, :string, public?: true
+    attribute :destination, DestinationSlug, public?: true
     attribute :starts_on, :date, allow_nil?: false, public?: true
     attribute :ends_on, :date, allow_nil?: false, public?: true
     attribute :price_cents, :integer, allow_nil?: false, default: 0, public?: true

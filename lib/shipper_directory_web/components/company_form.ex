@@ -11,7 +11,7 @@ defmodule ShipperDirectoryWeb.CompanyForm do
   alias ShipperDirectory.Discovery.Metros
 
   @list_fields ~w(destinations origin_metros)a
-  @admin_fields ~w(name website_url phone email address city state origin_metros destinations services sailing_schedule notes)a
+  @admin_fields ~w(name website_url phone email address city state origin_metros destinations services sailing_schedule neighborhood whatsapp_number next_sailing_date christmas_cutoff_date pickup_available notes)a
   @owner_fields ~w(website_url phone email address city state origin_metros destinations services sailing_schedule)a
 
   def admin_fields, do: @admin_fields
@@ -102,6 +102,33 @@ defmodule ShipperDirectoryWeb.CompanyForm do
         field={@form[:sailing_schedule]}
         label="Sailing schedule"
         placeholder="Sails Mon/Wed/Fri"
+      />
+      <.input :if={:neighborhood in @fields} field={@form[:neighborhood]} label="Neighborhood" />
+      <.input
+        :if={:whatsapp_number in @fields}
+        field={@form[:whatsapp_number]}
+        label="WhatsApp number"
+        placeholder="+1 718 555 0101"
+      />
+      <.input
+        :if={:next_sailing_date in @fields}
+        field={@form[:next_sailing_date]}
+        type="date"
+        label="Next sailing"
+      />
+      <.input
+        :if={:christmas_cutoff_date in @fields}
+        field={@form[:christmas_cutoff_date]}
+        type="date"
+        label="Christmas cutoff (last drop-off)"
+      />
+      <.input
+        :if={:pickup_available in @fields}
+        field={@form[:pickup_available]}
+        type="select"
+        label="Pickup available"
+        prompt="Unknown"
+        options={[{"Yes", "true"}, {"No", "false"}]}
       />
       <.input :if={:notes in @fields} field={@form[:notes]} type="textarea" label="Internal notes" />
       <div class="sm:col-span-2">

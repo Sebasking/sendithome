@@ -37,6 +37,30 @@ defmodule ShipperDirectory.Fixtures do
     end
   end
 
+  @doc "A published, phone-verified company (shown in the QR flow). Brooklyn to Guyana by default."
+  def verified_company(attrs \\ %{}) do
+    attrs |> company() |> Directory.set_company_verified!(true)
+  end
+
+  @doc "Sets the QR flow's Christmas window so today is inside it (or not). Restored after the test."
+  def put_christmas_season(in_season?) do
+    original = Application.fetch_env!(:shipper_directory, :finder)
+    today = Date.utc_today()
+
+    {start, finish} =
+      if in_season?,
+        do: {Date.add(today, -10), Date.add(today, 10)},
+        else: {Date.add(today, 10), Date.add(today, 20)}
+
+    Application.put_env(
+      :shipper_directory,
+      :finder,
+      Keyword.merge(original, christmas_window_start: start, christmas_window_end: finish)
+    )
+
+    ExUnit.Callbacks.on_exit(fn -> Application.put_env(:shipper_directory, :finder, original) end)
+  end
+
   def lead_params(attrs \\ %{}) do
     Map.merge(
       %{

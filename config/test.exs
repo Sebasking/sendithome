@@ -56,4 +56,7 @@ config :phoenix_live_view,
 config :phoenix,
   sort_verified_routes_query_params: true
 
+# Write analytics events inline so tests can assert on them.
+config :shipper_directory, :async_event_log, false
+
 config :shipper_directory, :admin_auth, username: "admin", password: "secret"

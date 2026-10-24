@@ -9,8 +9,8 @@ defmodule ShipperDirectory.Directory.Lead do
     domain: ShipperDirectory.Directory,
     data_layer: AshPostgres.DataLayer
 
-  alias ShipperDirectory.Directory.{Destinations, Normalize}
-  alias ShipperDirectory.Discovery.Metros
+  alias ShipperDirectory.Directory.Normalize
+  alias ShipperDirectory.Directory.Types.{DestinationSlug, Metro}
 
   postgres do
     table "leads"
@@ -74,8 +74,6 @@ defmodule ShipperDirectory.Directory.Lead do
     validate present([:email, :phone], at_least: 1),
       message: "Enter an email or a phone number so shippers can reach you"
 
-    validate one_of(:origin_metro, Metros.slugs())
-    validate one_of(:destination, Destinations.slugs())
     validate numericality(:barrels, greater_than_or_equal_to: 0, less_than_or_equal_to: 100)
     validate numericality(:boxes, greater_than_or_equal_to: 0, less_than_or_equal_to: 100)
   end
@@ -86,8 +84,8 @@ defmodule ShipperDirectory.Directory.Lead do
     attribute :email, :ci_string, public?: true
     attribute :phone, :string, public?: true
     attribute :normalized_phone, :string
-    attribute :origin_metro, :string, allow_nil?: false, public?: true
-    attribute :destination, :string, allow_nil?: false, public?: true
+    attribute :origin_metro, Metro, allow_nil?: false, public?: true
+    attribute :destination, DestinationSlug, allow_nil?: false, public?: true
     attribute :barrels, :integer, allow_nil?: false, default: 0, public?: true
     attribute :boxes, :integer, allow_nil?: false, default: 0, public?: true
     attribute :other_items, :string, public?: true

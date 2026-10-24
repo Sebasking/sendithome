@@ -113,6 +113,61 @@ defmodule ShipperDirectoryWeb.Layouts do
   end
 
   @doc """
+  Layout for the QR sticker flow: a mobile-first column (about 480px wide,
+  centered on larger screens) in the brand tokens, always light.
+
+  The header shows the full logo on the first step. Later steps get a Back
+  link (a patch, so it stays in the flow) and either a step label or a
+  small logo.
+  """
+  attr :flash, :map, required: true
+  attr :back, :string, default: nil, doc: "path for the Back link; nil on the first step"
+  attr :step_label, :string, default: nil
+  attr :logo_variant, :atom, default: :a, doc: "the sticker's logo, for the A/B test"
+
+  slot :inner_block, required: true
+
+  def flow(assigns) do
+    ~H"""
+    <div class="flex min-h-dvh flex-col bg-brand-ground font-outfit text-brand-ink antialiased">
+      <header class="border-b border-brand-border bg-brand-surface">
+        <div class={[
+          "mx-auto flex min-h-16 w-full max-w-[480px] items-center gap-2",
+          if(@back, do: "px-3 py-2.5", else: "px-6 py-4")
+        ]}>
+          <%= if @back do %>
+            <.link
+              patch={@back}
+              id="flow-back"
+              class="flex min-h-11 items-center gap-1 rounded-lg px-3 text-base font-semibold text-brand-primary transition-colors hover:bg-brand-tint hover:text-brand-ink"
+            >
+              <.icon name="hero-chevron-left" class="size-5" /> Back
+            </.link>
+            <span :if={@step_label} id="flow-step" class="ml-auto pr-3 text-sm text-brand-muted">
+              {@step_label}
+            </span>
+            <img
+              :if={!@step_label}
+              src={Brand.asset("lockup.svg", @logo_variant)}
+              alt="SendItHome"
+              class="ml-auto mr-3 h-5 w-auto"
+            />
+          <% else %>
+            <img src={Brand.asset("lockup.svg", @logo_variant)} alt="SendItHome" class="h-7 w-auto" />
+          <% end %>
+        </div>
+      </header>
+
+      <main class="mx-auto flex w-full max-w-[480px] flex-1 flex-col">
+        {render_slot(@inner_block)}
+      </main>
+    </div>
+
+    <.flash_group flash={@flash} />
+    """
+  end
+
+  @doc """
   Live layout for the AshAuthentication pages (sign in, magic link, sign out):
   a centered, branded card in place of the full site chrome.
   """

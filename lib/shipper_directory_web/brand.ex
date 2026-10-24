@@ -20,8 +20,12 @@ defmodule ShipperDirectoryWeb.Brand do
     end
   end
 
-  @doc "Static path for `file` in the active variant's brand folder, e.g. `asset(\"mark.svg\")`."
-  def asset(file), do: ~p"/images/brand/#{logo_variant()}/#{file}"
+  @doc """
+  Static path for `file` in a variant's brand folder (the active one by
+  default), e.g. `asset("mark.svg")`.
+  """
+  def asset(file, variant \\ logo_variant()) when variant in @variants,
+    do: ~p"/images/brand/#{variant}/#{file}"
 
   @doc "Absolute path on disk for `file` in the active variant's brand folder."
   def asset_file(file) do
