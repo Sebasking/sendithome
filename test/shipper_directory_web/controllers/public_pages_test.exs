@@ -13,7 +13,6 @@ defmodule ShipperDirectoryWeb.PublicPagesTest do
         state: "NY",
         phone: "(718) 483-8006",
         destinations: ["St. Lucia", "Guyana"],
-        services: [:barrel],
         sailing_schedule: "Sails every Friday",
         fmc_license_no: "012345",
         website_url: "https://fcsshipping.com",
@@ -97,7 +96,7 @@ defmodule ShipperDirectoryWeb.PublicPagesTest do
       {:ok, view, _html} = live(conn, ~p"/")
 
       view
-      |> form("#search", search: %{from: "miami", to: "", service: ""})
+      |> form("#search", search: %{from: "miami", to: ""})
       |> render_change()
 
       assert_patch(view, ~p"/?from=miami")
