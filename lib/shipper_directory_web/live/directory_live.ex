@@ -19,7 +19,6 @@ defmodule ShipperDirectoryWeb.DirectoryLive do
      assign(socket,
        metros: Enum.map(Metros.all(), &{&1.name, &1.slug}),
        destinations: Enum.map(Destinations.all(), &{&1.name, &1.slug}),
-       services: Enum.map(Service.values(), &{&1 |> to_string() |> String.capitalize(), &1}),
        routes: RoutePages.available() |> Enum.take(12),
        page_title: "Find a Caribbean barrel shipper",
        meta_description:
@@ -88,7 +87,7 @@ defmodule ShipperDirectoryWeb.DirectoryLive do
           id="search"
           phx-change="search"
           phx-submit="search"
-          class="mt-6 grid gap-3 sm:grid-cols-3"
+          class="mt-6 grid gap-3 sm:grid-cols-2"
         >
           <.input
             field={@form[:from]}
@@ -103,13 +102,6 @@ defmodule ShipperDirectoryWeb.DirectoryLive do
             label="Shipping to"
             prompt="Any destination"
             options={@destinations}
-          />
-          <.input
-            field={@form[:service]}
-            type="select"
-            label="Service"
-            prompt="Any service"
-            options={@services}
           />
         </.form>
       </section>
