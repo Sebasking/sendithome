@@ -129,3 +129,53 @@
   font-display: swap;
   src: url("/fonts/outfit-latin.woff2") format("woff2");
 }
+
+/* Home page hero video (HeroComponents.hero_video, HeroVideo hook in app.js).
+   The box is reserved at 16:9 before the video loads, so nothing shifts. */
+.hero-video {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  background-color: var(--color-brand-ground);
+}
+
+.hero-video__media {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+
+.hero-video__toggle {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  background-color: rgb(16 41 43 / 0.7);
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 150ms ease, transform 150ms ease, opacity 200ms ease;
+}
+
+.hero-video__toggle:hover { background-color: rgb(16 41 43 / 0.85); }
+.hero-video__toggle:active { transform: scale(0.94); }
+
+/* White ring inside an ink ring: 3:1 against both the light page and any frame
+   of the video. The transparent outline keeps a ring in forced-colors mode. */
+.hero-video__toggle:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--color-brand-ink);
+}
+
+/* Hidden until the hook takes over; without JS the poster just stays. */
+.hero-video:not([data-playing]) .hero-video__toggle { visibility: hidden; opacity: 0; }
+.hero-video[data-playing="true"] .hero-video__play,
+.hero-video:not([data-playing="true"]) .hero-video__pause { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-video__toggle { transition: none; }
+}
