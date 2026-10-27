@@ -7,6 +7,8 @@ defmodule ShipperDirectoryWeb.FlowParams do
   they're linked or logged.
   """
 
+  alias ShipperDirectoryWeb.Brand
+
   @utm ~w(utm_source utm_medium utm_campaign utm_content)
 
   @doc "The `src` and UTM params present in `params`, as a string-keyed map."
@@ -47,8 +49,13 @@ defmodule ShipperDirectoryWeb.FlowParams do
     }
   end
 
-  @doc "The logo variant a visitor saw on their sticker, from the source or `utm_content`."
+  @doc """
+  The logo variant a visitor saw on their sticker, from the source or
+  `utm_content`. Visitors who didn't come from a sticker (say, from the home
+  page) get the site's own logo, so it doesn't change under them.
+  """
   def logo_variant(%{logo_variant: variant}, _carry) when variant in [:a, :b], do: variant
+  def logo_variant(_sticker, %{"utm_content" => "logo_a"}), do: :a
   def logo_variant(_sticker, %{"utm_content" => "logo_b"}), do: :b
-  def logo_variant(_sticker, _carry), do: :a
+  def logo_variant(_sticker, _carry), do: Brand.logo_variant()
 end

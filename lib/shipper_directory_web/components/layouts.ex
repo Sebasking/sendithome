@@ -113,17 +113,20 @@ defmodule ShipperDirectoryWeb.Layouts do
   end
 
   @doc """
-  Layout for the QR sticker flow: a mobile-first column (about 480px wide,
-  centered on larger screens) in the brand tokens, always light.
+  Layout for the QR sticker flow: a mobile-first column (480px wide on
+  phones, a little wider and centered from md up) in the brand tokens,
+  light or dark like the rest of the site.
 
   The header shows the full logo on the first step. Later steps get a Back
   link (a patch, so it stays in the flow) and either a step label or a
-  small logo.
+  small logo. From md up the header lines up with the site header instead,
+  theme toggle included.
   """
   attr :flash, :map, required: true
   attr :back, :string, default: nil, doc: "path for the Back link; nil on the first step"
   attr :step_label, :string, default: nil
   attr :logo_variant, :atom, default: :a, doc: "the sticker's logo, for the A/B test"
+  attr :wide, :boolean, default: false, doc: "a wider column from md up, for the results grid"
 
   slot :inner_block, required: true
 
@@ -131,34 +134,68 @@ defmodule ShipperDirectoryWeb.Layouts do
     ~H"""
     <div class="flex min-h-dvh flex-col bg-brand-ground font-outfit text-brand-ink antialiased">
       <header class="border-b border-brand-border bg-brand-surface">
+        <%!-- On phones: Back, then the step label or a small logo. From md up it
+             matches the site header: logo on the left (linking home), then Back. --%>
         <div class={[
-          "mx-auto flex min-h-16 w-full max-w-[480px] items-center gap-2",
+          "mx-auto flex min-h-16 w-full max-w-[480px] items-center gap-2 md:min-h-15 md:max-w-6xl md:gap-3 md:px-6 md:py-2",
           if(@back, do: "px-3 py-2.5", else: "px-6 py-4")
         ]}>
-          <%= if @back do %>
-            <.link
-              patch={@back}
-              id="flow-back"
-              class="flex min-h-11 items-center gap-1 rounded-lg px-3 text-base font-semibold text-brand-primary transition-colors hover:bg-brand-tint hover:text-brand-ink"
-            >
-              <.icon name="hero-chevron-left" class="size-5" /> Back
-            </.link>
-            <span :if={@step_label} id="flow-step" class="ml-auto pr-3 text-sm text-brand-muted">
-              {@step_label}
-            </span>
+          <.link
+            :if={@back}
+            patch={@back}
+            id="flow-back"
+            class="flex min-h-11 items-center gap-1 rounded-lg px-3 text-base font-semibold text-brand-primary transition-colors hover:bg-brand-tint hover:text-brand-ink md:order-3"
+          >
+            <.icon name="hero-chevron-left" class="size-5" /> Back
+          </.link>
+          <span
+            :if={@step_label}
+            id="flow-step"
+            class="ml-auto pr-3 text-sm text-brand-muted md:order-4 md:pr-0"
+          >
+            {@step_label}
+          </span>
+          <span :if={@back} class="hidden h-6 w-px bg-brand-border md:order-2 md:block" />
+          <div
+            id="flow-theme-toggle"
+            class={["hidden md:order-5 md:block", !@step_label && "md:ml-auto"]}
+          >
+            <.theme_toggle />
+          </div>
+          <%!-- Home is in another live_session, so a full page load. --%>
+          <.link
+            href={~p"/"}
+            id="flow-logo"
+            aria-label="SendItHome home"
+            class={[
+              "shrink-0 items-center rounded transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary md:order-1 md:m-0 md:flex",
+              cond do
+                !@back -> "flex"
+                @step_label -> "hidden"
+                true -> "ml-auto mr-3 flex"
+              end
+            ]}
+          >
             <img
-              :if={!@step_label}
               src={Brand.asset("lockup.svg", @logo_variant)}
               alt="SendItHome"
-              class="ml-auto mr-3 h-5 w-auto"
+              class={["w-auto dark:hidden md:h-8", if(@back, do: "h-5", else: "h-7")]}
             />
-          <% else %>
-            <img src={Brand.asset("lockup.svg", @logo_variant)} alt="SendItHome" class="h-7 w-auto" />
-          <% end %>
+            <img
+              src={Brand.asset("lockup-reversed.svg", @logo_variant)}
+              alt="SendItHome"
+              class={["hidden w-auto dark:block md:h-8", if(@back, do: "h-5", else: "h-7")]}
+            />
+          </.link>
         </div>
       </header>
 
-      <main class="mx-auto flex w-full max-w-[480px] flex-1 flex-col">
+      <%!-- Steps fill the screen on phones (their footers pin to the bottom);
+           from md up they size to their content. --%>
+      <main class={[
+        "mx-auto flex w-full max-w-[480px] flex-1 flex-col md:flex-none md:pt-8 md:pb-16",
+        if(@wide, do: "md:max-w-4xl", else: "md:max-w-xl")
+      ]}>
         {render_slot(@inner_block)}
       </main>
     </div>
@@ -273,6 +310,44 @@ defmodule ShipperDirectoryWeb.Layouts do
         <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
       </.flash>
     </div>
+    """
+  end
+
+  @doc """
+  Applies the visitor's theme (`phx:theme` in localStorage, else the system
+  setting) before first paint, and listens for `theme_toggle/1`. Goes in the
+  `<head>` of each root layout. Nothing is stored until a theme is picked.
+  """
+  def theme_script(assigns) do
+    ~H"""
+    <script>
+      (() => {
+        const systemTheme = () => matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+
+        const setTheme = (theme) => {
+          if (theme === "system") {
+            localStorage.removeItem("phx:theme");
+            document.documentElement.setAttribute("data-theme", systemTheme());
+            document.documentElement.setAttribute("data-theme-source", "system");
+          } else {
+            localStorage.setItem("phx:theme", theme);
+            document.documentElement.setAttribute("data-theme", theme);
+            document.documentElement.setAttribute("data-theme-source", "user");
+          }
+        };
+        if (!document.documentElement.hasAttribute("data-theme")) {
+          setTheme(localStorage.getItem("phx:theme") || "system");
+        }
+        window.addEventListener("storage", (e) => e.key === "phx:theme" && setTheme(e.newValue || "system"));
+        window.addEventListener("phx:set-theme", (e) => setTheme(e.target.dataset.phxTheme));
+
+        matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+          if (document.documentElement.getAttribute("data-theme-source") === "system") {
+            document.documentElement.setAttribute("data-theme", systemTheme());
+          }
+        });
+      })();
+    </script>
     """
   end
 

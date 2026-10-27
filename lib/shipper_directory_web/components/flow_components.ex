@@ -123,7 +123,8 @@ defmodule ShipperDirectoryWeb.FlowComponents do
           Makes Christmas cutoff
         </span>
       </div>
-      <div :if={@channels != []} class="flex gap-2.5">
+      <%!-- mt-auto lines the buttons up across a row of the results grid --%>
+      <div :if={@channels != []} class="mt-auto flex gap-2.5">
         <.link
           :for={{channel, label, icon} <- @channels}
           href={~p"/go/#{@shipper.slug}/#{channel}?#{@go_query}"}
@@ -140,7 +141,8 @@ defmodule ShipperDirectoryWeb.FlowComponents do
     """
   end
 
-  defp contact_class(true, :call), do: "bg-brand-primary text-white hover:bg-brand-ink"
+  defp contact_class(true, :call),
+    do: "bg-brand-primary text-brand-on-primary hover:bg-brand-ink"
 
   defp contact_class(true, _channel),
     do: "border border-brand-primary bg-brand-surface text-brand-primary hover:bg-brand-tint"

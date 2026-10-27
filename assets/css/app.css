@@ -109,6 +109,7 @@
    text-brand-ink, etc. The accent orange is decoration only, never text. */
 @theme {
   --color-brand-primary: #0E6B6B;
+  --color-brand-on-primary: #FFFFFF;
   --color-brand-accent: #E8743B;
   --color-brand-ink: #10292B;
   --color-brand-muted: #4A5F61;
@@ -119,6 +120,21 @@
   --color-brand-sponsor-bg: #FDEBDD;
   --color-brand-sponsor-ink: #5A2609;
   --font-outfit: "Outfit", system-ui, sans-serif;
+}
+
+/* The flow's dark mode. Scoped to flow pages, since the home hero stays light
+   to sit flush with its video. Text and links keep 4.5:1 on ground and surface. */
+[data-theme=dark] .flow-page {
+  --color-brand-primary: #5BBDB5;
+  --color-brand-on-primary: #10292B;
+  --color-brand-ink: #EAF2F1;
+  --color-brand-muted: #A3B8B7;
+  --color-brand-ground: #10292B;
+  --color-brand-surface: #173538;
+  --color-brand-border: #2B4A4D;
+  --color-brand-tint: #1D4144;
+  --color-brand-sponsor-bg: #3E2718;
+  --color-brand-sponsor-ink: #F7CBAA;
 }
 
 /* Outfit (variable, latin subset), self-hosted so visitors' browsers never call Google. */
