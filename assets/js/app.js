@@ -25,13 +25,66 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/shipper_directory"
 import topbar from "../vendor/topbar"
 
+// Home page hero video (HeroComponents.hero_video). Plays only while at least
+// 25% visible, never on its own with reduced motion or Save-Data, and a pause
+// from the toggle sticks for the rest of the page view (it's not stored).
+const HeroVideo = {
+  mounted() {
+    const video = this.el.querySelector("video")
+    const toggle = this.el.querySelector("[data-role=toggle]")
+    const saveData = navigator.connection?.saveData === true
+    this.motion = window.matchMedia("(prefers-reduced-motion: reduce)")
+    let visible = false
+    let pausedByVisitor = false
+    let playPressed = false // visitor pressed Play despite reduced motion or Save-Data
+
+    const mayPlay = () =>
+      visible && !pausedByVisitor && (playPressed || !(this.motion.matches || saveData))
+    // A rejected play() (autoplay blocked) leaves the poster and the Play state.
+    const play = () => video.play().catch(() => {})
+    const sync = () => (mayPlay() ? play() : video.pause())
+    const render = () => {
+      const playing = !video.paused
+      this.el.dataset.playing = playing
+      toggle.setAttribute("aria-label", playing ? "Pause animation" : "Play animation")
+    }
+
+    video.muted = true
+    video.addEventListener("play", render)
+    video.addEventListener("pause", render)
+    toggle.addEventListener("click", () => {
+      pausedByVisitor = !video.paused
+      if (pausedByVisitor) return video.pause()
+      playPressed = true
+      play()
+    })
+
+    this.onMotionChange = () => {
+      if (this.motion.matches) playPressed = false
+      sync()
+    }
+    this.motion.addEventListener("change", this.onMotionChange)
+
+    this.observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting && entry.intersectionRatio >= 0.25
+      sync()
+    }, {threshold: [0, 0.25]})
+    this.observer.observe(this.el)
+    render()
+  },
+  destroyed() {
+    this.observer.disconnect()
+    this.motion.removeEventListener("change", this.onMotionChange)
+  },
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']")?.getAttribute("content")
 // The cookie-free QR flow pages connect to their own session-less socket.
 const livePath = document.querySelector("meta[name='live-socket-path']")?.getAttribute("content") || "/live"
 const liveSocket = new LiveSocket(livePath, Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks},
+  hooks: {...colocatedHooks, HeroVideo},
 })
 
 // Show progress bar on live navigation and form submits

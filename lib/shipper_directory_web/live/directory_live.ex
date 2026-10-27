@@ -7,6 +7,7 @@ defmodule ShipperDirectoryWeb.DirectoryLive do
   use ShipperDirectoryWeb, :live_view
 
   import ShipperDirectoryWeb.DirectoryComponents
+  import ShipperDirectoryWeb.HeroComponents
 
   alias ShipperDirectory.{Directory, Placements}
   alias ShipperDirectory.Directory.{Destinations, RoutePages}
@@ -74,20 +75,55 @@ defmodule ShipperDirectoryWeb.DirectoryLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <section class="rounded-3xl bg-gradient-to-br from-primary/15 via-base-200 to-base-100 px-6 py-10 sm:px-10">
-        <h1 class="max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
-          Ship a barrel home to the Caribbean
-        </h1>
-        <p class="mt-3 max-w-2xl text-base opacity-80">
-          Find barrel and freight shippers near you. Every listed shipper has a working website we've checked.
-        </p>
+      <%!-- Always light: the video's own background is the brand ground color. --%>
+      <section
+        id="hero"
+        class="grid items-center gap-6 rounded-3xl bg-brand-ground px-5 py-7 text-brand-ink sm:px-8 md:grid-cols-[2fr_3fr] md:gap-10 md:px-10 md:py-12"
+      >
+        <div>
+          <h1 class="text-3xl font-bold tracking-tight text-balance sm:text-4xl lg:text-5xl">
+            Find your Caribbean shipper
+          </h1>
+          <p class="mt-3 text-lg text-brand-muted">
+            Compare barrel shippers near you, from pickup to delivery back home.
+          </p>
+          <div class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
+            <%!-- /start lives in the cookie-free flow session, so a full page load. --%>
+            <.link
+              href={~p"/start"}
+              id="hero-find-shipper"
+              class="group inline-flex min-h-12 items-center gap-2 rounded-xl bg-brand-primary px-6 text-lg font-semibold text-white shadow-sm transition hover:bg-brand-ink hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary active:scale-[0.98]"
+            >
+              Find a shipper
+              <.icon
+                name="hero-arrow-right"
+                class="size-5 transition-transform group-hover:translate-x-0.5"
+              />
+            </.link>
+            <.link
+              href={~p"/shippers"}
+              id="hero-browse-shippers"
+              class="font-semibold text-brand-primary underline-offset-4 transition hover:text-brand-ink hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
+            >
+              Browse all shippers
+            </.link>
+          </div>
+        </div>
+        <div class="min-w-0">
+          <.hero_video />
+        </div>
+      </section>
 
+      <section class="rounded-2xl border border-base-300 bg-base-100 px-5 py-5 sm:px-8">
+        <h2 class="text-sm font-semibold uppercase tracking-wide opacity-70">
+          Search the directory
+        </h2>
         <.form
           for={@form}
           id="search"
           phx-change="search"
           phx-submit="search"
-          class="mt-6 grid gap-3 sm:grid-cols-2"
+          class="mt-3 grid gap-3 sm:grid-cols-2"
         >
           <.input
             field={@form[:from]}

@@ -38,3 +38,7 @@ npm-debug.log
 
 # macOS Finder metadata
 .DS_Store
+
+# Remotion project for the homepage hero video (renders are committed to priv/static/videos/).
+/animation/node_modules/
+/animation/out/
