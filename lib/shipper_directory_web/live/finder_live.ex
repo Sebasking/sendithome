@@ -10,7 +10,8 @@ defmodule ShipperDirectoryWeb.FinderLive do
   All state lives in the URL (`to`, `when`, `src` and the UTM params), and
   steps move by patch, so every step is a shareable URL and Back works.
   Every control is a real link, so the pages work before (or without) the
-  socket. No cookies or browser storage are used.
+  socket. No cookies are used, and browser storage only holds a theme the
+  visitor picks with the toggle (see `Layouts.theme_script/1`).
 
   Answers and impressions are logged only from the connected LiveView, so
   each one counts once. An answer is logged when the visitor moves on from
@@ -340,10 +341,15 @@ defmodule ShipperDirectoryWeb.FinderLive do
 
   def render(%{live_action: :results} = assigns) do
     ~H"""
-    <Layouts.flow flash={@flash} back={results_back_path(assigns)} logo_variant={@logo_variant}>
-      <div class="flex flex-col gap-4 px-5 pb-8 pt-5">
+    <Layouts.flow
+      flash={@flash}
+      back={results_back_path(assigns)}
+      logo_variant={@logo_variant}
+      wide
+    >
+      <div class="flex flex-col gap-4 px-5 pb-8 pt-5 md:px-6">
         <div class="flex flex-col gap-1">
-          <.heading class="text-[26px]">{@heading}</.heading>
+          <.heading class="text-[26px] md:text-3xl">{@heading}</.heading>
           <p id="results-summary" class="text-[15px] text-brand-muted">
             {summary(@results, @timing)}
           </p>
@@ -377,7 +383,7 @@ defmodule ShipperDirectoryWeb.FinderLive do
           go_query={@go_query}
         />
 
-        <div id="shippers" phx-update="stream" class="flex flex-col gap-4">
+        <div id="shippers" phx-update="stream" class="grid gap-4 md:grid-cols-2">
           <.shipper_card
             :for={{id, shipper} <- @streams.shippers}
             id={id}
@@ -400,7 +406,7 @@ defmodule ShipperDirectoryWeb.FinderLive do
           <a
             id="suggest-shipper"
             href={Finder.suggest_shipper_url()}
-            class="flex min-h-12 items-center justify-center rounded-xl bg-brand-primary text-base font-semibold text-white transition hover:bg-brand-ink"
+            class="flex min-h-12 items-center justify-center rounded-xl bg-brand-primary text-base font-semibold text-brand-on-primary transition hover:bg-brand-ink"
           >
             Suggest a shipper
           </a>
@@ -428,7 +434,7 @@ defmodule ShipperDirectoryWeb.FinderLive do
   end
 
   # Focus target after a patch (see app.js), so screen readers hear the new step.
-  attr :class, :string, default: "text-[30px]"
+  attr :class, :string, default: "text-[30px] md:text-4xl"
   slot :inner_block, required: true
 
   defp heading(assigns) do

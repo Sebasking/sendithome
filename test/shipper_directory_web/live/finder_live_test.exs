@@ -47,6 +47,33 @@ defmodule ShipperDirectoryWeb.FinderLiveTest do
       assert has_element?(view, "#browse-all[href='/shippers?src=store-1&utm_content=logo_b']")
     end
 
+    test "the logo links home and matches the site's unless a sticker says otherwise", %{
+      conn: conn
+    } do
+      {:ok, view, _html} = live(conn, ~p"/start")
+      site_logo = ShipperDirectoryWeb.Brand.asset("lockup.svg")
+      assert has_element?(view, "#flow-logo[href='/'] img[src='#{site_logo}']")
+
+      for variant <- ~w(a b) do
+        {:ok, view, _html} = live(conn, ~p"/start?utm_content=logo_#{variant}")
+        logo = ShipperDirectoryWeb.Brand.asset("lockup.svg", String.to_existing_atom(variant))
+        assert has_element?(view, "#flow-logo img[src='#{logo}']")
+      end
+    end
+
+    test "follows the site theme, with the same toggle and a reversed logo for dark mode", %{
+      conn: conn
+    } do
+      {:ok, view, _html} = live(conn, ~p"/start")
+
+      assert has_element?(view, "#flow-theme-toggle button[data-phx-theme='dark']")
+
+      assert has_element?(
+               view,
+               "#flow-logo img[src='#{ShipperDirectoryWeb.Brand.asset("lockup-reversed.svg")}']"
+             )
+    end
+
     test "in season, a destination leads to the timing question and logs the answer", %{
       conn: conn
     } do
